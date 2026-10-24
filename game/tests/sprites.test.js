@@ -2,6 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadSprites } from "../src/sprites.js";
 
+test("midfield logo loads from a local asset", () => {
+    const calls = [];
+    globalThis.loadSprite = (name, path) => calls.push({ name, path });
+    loadSprites();
+    assert.ok(calls.some(({ name, path }) => name === "tam-logo" && path === "sprites/tam-maroon.svg"));
+});
+
 test("side animations never cross into the opposite-facing frames", () => {
     let loaded;
     globalThis.loadSprite = (name, path, options) => { loaded = { name, path, options }; };

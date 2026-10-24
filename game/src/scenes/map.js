@@ -1,13 +1,21 @@
 import { addPlayer } from "../objects/player.js";
 import { followPlayer } from "../camera.js";
-
-const FIELD_BOUNDS = { left: 0, top: 0, right: 2400, bottom: 1350 };
+import { FIELD_LAYOUT, drawField } from "../field.js";
 
 scene("mapSelect", () => {
     setBackground(rgb(80, 0, 0));
-    const field = FIELD_BOUNDS;
-    const fieldWidth = field.right - field.left;
-    const fieldHeight = field.bottom - field.top;
+    const field = FIELD_LAYOUT.bounds;
+    drawField();
+
+    // Solid HUD backplates keep field markings from competing with the controls.
+    add([
+        rect(216, 52, { radius: 8 }), pos(center().x - 108, 10),
+        color(80, 0, 0), fixed(), z(9),
+    ]);
+    add([
+        rect(width(), 40), pos(0, height() - 48),
+        color(80, 0, 0), fixed(), z(9),
+    ]);
 
     add([
         text("Kyle Field", { size: 32 }),
@@ -17,30 +25,8 @@ scene("mapSelect", () => {
         z(10),
         outline(3, rgb(80, 0, 0)),
     ]);
-    add([
-        rect(fieldWidth, fieldHeight),
-        pos(field.left, field.top),
-        color(46, 112, 65),
-        outline(3, rgb(255, 255, 255)),
-    ]);
-    for (let yard = 1; yard < 10; yard++) {
-        add([
-            rect(2, fieldHeight - 24),
-            pos(field.left + fieldWidth * yard / 10, field.top + 12),
-            color(210, 225, 205),
-        ]);
-        // World-space hash marks make vertical travel visible while the camera follows.
-        for (let y = field.top + 90; y < field.bottom; y += 90) {
-            add([
-                rect(24, 2),
-                pos(field.left + fieldWidth * yard / 10 - 12, y),
-                color(210, 225, 205),
-            ]);
-        }
-    }
-
     const player = addPlayer({
-        spawn: { x: (field.left + field.right) / 2, y: (field.top + field.bottom) / 2 },
+        spawn: FIELD_LAYOUT.center,
         bounds: field,
     });
     followPlayer(player, field);

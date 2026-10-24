@@ -16,10 +16,18 @@ horizontally. Releasing movement returns to an idle pose facing the last directi
 provide a visible reference while the camera follows vertical movement.
 Press **Esc** to return to the title. Movement stops immediately when released,
 and diagonals travel at the same 300 pixels/second as cardinal directions.
-The placeholder field is 2400 × 1350 world pixels, larger than the 960 × 540
-camera view. The camera follows Reveille directly and stops at the map edges.
+The compact field is 1440 × 640 world pixels, including two 120-pixel maroon
+end zones. It has alternating turf bands, five-yard lines, one-yard hashes,
+mirrored yard numbers, orange pylons, and an A&M logo at midfield.
+The camera view is 960 × 540. It follows Reveille directly and stops at the map edges.
 The HUD stays fixed on screen, and the full player sprite stays inside the map.
 Resizing the window scales the view without changing world dimensions.
+
+The midfield logo artwork is stored at `public/sprites/tam-maroon.svg`,
+from [Texas A&M's official logo downloads](https://marcomm.tamu.edu/template/logo-downloads/)
+(TAM Maroon SVG, RGB).
+Explicit 216-pixel dimensions are added to the SVG root for game texture loading;
+the logo paths and colors are unchanged.
 
 ### Movement verification
 

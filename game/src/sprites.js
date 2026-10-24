@@ -1,4 +1,5 @@
 export function loadSprites() {
+    loadSprite("tam-logo", "sprites/tam-maroon.svg");
     loadSprite("reveille", "sprites/Reveille.png", {
         sliceX: 11,
         anims: {
