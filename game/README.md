@@ -6,26 +6,37 @@
 
 ## Development
 
-Select **Play** to enter the Kyle Field movement test area. The bean sprite is
-a temporary stand-in for Reveille. Move with **WASD** or the **arrow keys**;
-press **Esc** to return to the title. Movement stops immediately when released,
+Select **Play** to enter the Kyle Field movement test area as Reveille.
+Move with **WASD** or the **arrow keys**. Reveille uses the eleven-frame
+`public/sprites/Reveille.png` sheet at 64 × 64 world pixels, with walking
+animations at 8 FPS. Left uses frames 6–8 and right uses frames 9–10, without mirroring;
+diagonals face
+horizontally. Releasing movement returns to an idle pose facing the last direction.
+**W / Up arrow** moves up and **S / Down arrow** moves down. Field hash marks
+provide a visible reference while the camera follows vertical movement.
+Press **Esc** to return to the title. Movement stops immediately when released,
 and diagonals travel at the same 300 pixels/second as cardinal directions.
-The field scales with the window and keeps the full player sprite inside its edges.
+The placeholder field is 2400 × 1350 world pixels, larger than the 960 × 540
+camera view. The camera follows Reveille directly and stops at the map edges.
+The HUD stays fixed on screen, and the full player sprite stays inside the map.
+Resizing the window scales the view without changing world dimensions.
 
 ### Movement verification
 
-- Run `node --test tests/player.test.js` for movement and boundary checks.
+- Run `node --test tests/*.test.js` for movement and camera boundary checks.
 - Run `npm run build` to verify the production bundle.
 - In `npm run dev`, check both key layouts, diagonal movement, opposing keys,
-  immediate stopping, all four field edges, and resizing the browser.
+  immediate stopping, all four field edges, and resizing the browser. Check that
+  the camera follows immediately, stops at map edges, and keeps the HUD on screen.
 - Return to the title and press Play several times; confirm one player appears
-  and its movement speed stays the same.
+  and its movement speed stays the same. The title should remain centered and
+  the field camera should start at the player each time.
 
 ```sh
 $ npm run dev
 ```
 
-will start a dev server at http://localhost:8000
+will start a dev server at http://localhost:3000
 
 ## Distribution
 

@@ -1,4 +1,5 @@
 scene("title", () => {
+    setCamPos(center());
     setBackground(rgb(205, 170, 109))
     add([
         text("Rev's Day Off", { size: 48 }),

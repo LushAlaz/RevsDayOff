@@ -12,11 +12,14 @@ beforeEach(() => {
     globalThis.width = () => 960;
     globalThis.height = () => 540;
     globalThis.pos = (x, y) => ({ pos: { x, y } });
-    globalThis.sprite = () => ({ width: 32, height: 40 });
+    globalThis.sprite = (name, options) => ({ sprite: name, flipX: false, ...options });
     globalThis.anchor = () => ({});
     globalThis.isKeyDown = (key) => keys.has(key);
     globalThis.add = (components) => Object.assign({
         onUpdate(callback) { this.update = callback; },
+        plays: [],
+        play(name) { this.plays.push(name); this.animation = name; },
+        stop() { this.animation = null; },
         move(x, y) {
             this.pos.x += x * delta;
             this.pos.y += y * delta;
@@ -69,8 +72,8 @@ test("releasing controls stops immediately and speed is frame-rate independent",
 
 test("all boundaries account for the entire sprite, even after large steps", () => {
     for (const [key, expected] of [
-        ["a", { x: 48, y: 200 }], ["d", { x: 912, y: 200 }],
-        ["w", { x: 200, y: 108 }], ["s", { x: 200, y: 464 }],
+        ["a", { x: 64, y: 200 }], ["d", { x: 896, y: 200 }],
+        ["w", { x: 200, y: 120 }], ["s", { x: 200, y: 452 }],
     ]) {
         const player = addPlayer({ spawn: { x: 200, y: 200 },
             bounds: { left: 32, top: 88, right: 928, bottom: 484 } });
@@ -86,8 +89,59 @@ test("dynamic bounds reclamp an idle player and handle undersized areas", () => 
     const player = addPlayer({ bounds: () => bounds });
     bounds = { left: 0, top: 0, right: 100, bottom: 100 };
     player.update();
-    assert.deepEqual(player.pos, { x: 84, y: 80 });
+    assert.deepEqual(player.pos, { x: 68, y: 68 });
     bounds = { left: 0, top: 0, right: 10, bottom: 10 };
     player.update();
     assert.deepEqual(player.pos, { x: 5, y: 5 });
+});
+
+test("Reveille starts facing down at double sprite size", () => {
+    const player = addPlayer();
+    assert.equal(player.sprite, "reveille");
+    assert.equal(player.width, 64);
+    assert.equal(player.height, 64);
+    assert.equal(player.frame, 0);
+    player.update();
+    assert.deepEqual(player.plays, []);
+});
+
+test("walking uses native directional frames without mirroring and idles facing the last direction", () => {
+    const player = addPlayer();
+    for (const [key, animation, flipX, idle] of [
+        ["a", "left", false, 6], ["w", "up", false, 3],
+        ["d", "right", false, 9], ["s", "down", false, 0],
+    ]) {
+        keys = new Set([key]);
+        player.update();
+        assert.equal(player.animation, animation);
+        assert.equal(player.flipX, flipX);
+        keys.clear();
+        player.update();
+        assert.equal(player.animation, null);
+        assert.equal(player.frame, idle);
+        assert.equal(player.flipX, flipX);
+    }
+});
+
+test("continuous walking does not restart animation and diagonals face horizontally", () => {
+    const player = addPlayer();
+    keys = new Set(["w", "a"]);
+    player.update();
+    player.update();
+    assert.deepEqual(player.plays, ["left"]);
+    assert.equal(player.flipX, false);
+    keys = new Set(["w", "d"]);
+    player.update();
+    assert.equal(player.animation, "right");
+    assert.equal(player.flipX, false);
+    keys = new Set(["w"]);
+    player.update();
+    assert.equal(player.animation, "up");
+    keys.add("s");
+    player.update();
+    assert.equal(player.animation, null);
+    assert.equal(player.frame, 3);
+    keys.delete("s");
+    player.update();
+    assert.equal(player.animation, "up");
 });
