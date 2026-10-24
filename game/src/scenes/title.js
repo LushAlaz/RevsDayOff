@@ -1,4 +1,8 @@
+import { addPlayer } from "../objects/player.js"
+
 scene("title", () => {
+    setBackground(rgb(205, 170, 109))
+    addPlayer()
     add([
         text("Rev's Day Off", { size: 48 }),
         pos(center().x, center().y - 100),
