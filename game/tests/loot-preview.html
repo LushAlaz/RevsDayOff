@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Loot visual test</title></head>
+<body style="margin:0;overflow:hidden">
+<nav style="position:fixed;left:12px;bottom:8px;z-index:1000">
+  <button id="common">Common</button><button id="rare">Rare</button>
+  <button id="epic">Epic</button><button id="legendary">Legendary</button>
+  <button id="reward">Show reward</button>
+</nav>
+<script type="module">
+import "../src/setup.js";
+import { loadSprites } from "../src/sprites.js";
+import { addPlayer } from "../src/objects/player.js";
+import { createLootController } from "../src/loot.js";
+import { addLootUI } from "../src/loot-ui.js";
+import { ITEMS, RARITIES } from "../src/items.js";
+loadRoot("/");
+loadSprites();
+let loot;
+scene("preview", (rarity = "Common") => {
+    setBackground(rgb(43, 103, 61));
+    setCamPos(center());
+    const inventory = [];
+    loot = createLootController({ spots: [{ id: 0, position: { x: 480, y: 270 },
+        item: ITEMS[rarity === "Legendary" ? 2 : rarity === "Epic" ? 1 : 0], rarity, collected: false }],
+        inventory, random: () => 0.5 });
+    const player = addPlayer({ spawn: { x: 480, y: 270 }, inventory,
+        getMovementState: () => ({ locked: loot.phase === "challenge", sniffing: isKeyDown("x") }) });
+    player.onUpdate(() => loot.step(dt(), isKeyDown("x"), player.pos));
+    onKeyPress("space", () => loot.stopSpinner());
+    onKeyPress("escape", () => loot.cancel());
+    addLootUI(player, loot, inventory);
+});
+for (const rarity of Object.keys(RARITIES)) {
+    document.querySelector(`#${rarity.toLowerCase()}`).onclick = () => go("preview", rarity);
+}
+document.querySelector("#reward").onclick = () => {
+    go("reward-preview");
+};
+scene("reward-preview", () => {
+    setBackground(rgb(43, 103, 61));
+    const inventory = [];
+    const position = { x: 480, y: 270 };
+    const spot = { id: 0, position, item: ITEMS[2], rarity: "Legendary", collected: false };
+    const rewardLoot = createLootController({ spots: [spot], inventory, random: () => 0.5 });
+    const player = addPlayer({ spawn: position });
+    rewardLoot.step(0, true, position);
+    rewardLoot.step(180 / RARITIES.Legendary.speed, true, position);
+    rewardLoot.stopSpinner();
+    addLootUI(player, rewardLoot, inventory);
+});
+go("preview");
+</script>
+</body>
+</html>

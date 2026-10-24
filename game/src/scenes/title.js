@@ -1,3 +1,5 @@
+import { startNewGame } from "../session.js";
+
 scene("title", () => {
     setCamPos(center());
     setBackground(rgb(205, 170, 109))
@@ -26,6 +28,7 @@ scene("title", () => {
     playBtn.onHoverEnd(() => setCursor("default"));
     playBtn.onClick(() => {
         setCursor("default");
+        startNewGame();
         go("mapSelect");
     });
 });
