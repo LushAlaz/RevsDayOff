@@ -15,4 +15,5 @@ export function loadSprites() {
             right: { from: 9, to: 10, speed: 8, loop: true },
         },
     });
+    loadFont("ithaca", "fonts/Ithaca-LVB75.ttf")
 }

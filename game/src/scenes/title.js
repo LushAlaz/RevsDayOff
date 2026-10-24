@@ -36,7 +36,7 @@ export function titleScene() {
         function startGame() {
             setCursor("default");
             startNewGame(); // empty the bag from the last run
-            go("mapSelect");
+            go("intro");    // the intro story goes on to mapSelect when it ends
         }
 
         // a 320x240 "screen" that everything below is added to.
