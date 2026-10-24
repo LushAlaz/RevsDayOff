@@ -1,4 +1,5 @@
 export function loadSprites() {
+    loadBean()
     loadSprite("tam-logo", "sprites/tam-maroon.svg");
     loadSprite("good-bull-shop", "sprites/good-bull-2d.png");
     loadSprite("reveille", "sprites/Reveille.png", {

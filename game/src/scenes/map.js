@@ -1,8 +1,8 @@
 import { addPlayer } from "../objects/player.js";
+import { addItem } from "../objects/item.js";
 import { followPlayer } from "../camera.js";
 import { FIELD_LAYOUT, drawField } from "../field.js";
 import { SHOP, addFieldShop } from "../shop.js";
-
 scene("mapSelect", ({ spawn = FIELD_LAYOUT.center } = {}) => {
     setBackground(rgb(80, 0, 0));
     const field = FIELD_LAYOUT.bounds;
