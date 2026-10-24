@@ -1,10 +1,12 @@
 import { addPlayer } from "../objects/player.js";
-import { SHOP, addSceneEntrance } from "../shop.js";
+import { addSceneEntrance } from "../shop.js";
 import { session } from "../session.js";
 import { createSellingController } from "../selling.js";
 import { addSellingUI } from "../selling-ui.js";
+import { getMap, getShopReturn } from "../maps.js";
 
-scene("shop", () => {
+scene("shop", ({ mapId = session.mapId } = {}) => {
+    const origin = getMap(mapId);
     setCamPos(center());
     setBackground(rgb(24, 30, 40));
     const bounds = { left: 80, top: 100, right: 880, bottom: 480 };
@@ -47,16 +49,16 @@ scene("shop", () => {
     });
     addSellingUI(player, selling);
     addSceneEntrance(player, {
-        point: { x: 856, y: 400 }, label: "Space: Return to Kyle Field", target: "mapSelect",
-        args: { spawn: SHOP.returnSpawn },
+        point: { x: 856, y: 400 }, label: `Space: Return to ${origin.name}`, target: "explore",
+        args: getShopReturn(origin.id),
         canInteract: () => !selling.open,
     });
     add([
-        text("Move: WASD / Arrows    |    Esc: Return to Kyle Field", { size: 16 }),
+        text(`Move: WASD / Arrows    |    Esc: Return to ${origin.name}`, { size: 16 }),
         pos(center().x, 78), anchor("center"),
     ]);
     onKeyPress("escape", () => {
         if (selling.open) selling.close();
-        else go("mapSelect", { spawn: SHOP.returnSpawn });
+        else go("explore", getShopReturn(origin.id));
     });
 });

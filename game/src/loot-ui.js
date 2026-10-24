@@ -1,7 +1,7 @@
 import { RARITIES } from "./items.js";
 import { session } from "./session.js";
 
-export function addLootUI(player, loot, inventory) {
+export function addLootUI(player, loot, inventory, mapName = "Kyle Field") {
     const sniffLabel = add([
         text("Sniffing...", { size: 14 }), pos(0, 0), anchor("center"),
         outline(3, rgb(25, 30, 25)), z(4),
@@ -35,7 +35,7 @@ export function addLootUI(player, loot, inventory) {
                 const cx = width() / 2;
                 const cy = height() / 2;
                 drawRect({ pos: vec2(10, 10), width: width() - 20, height: 58, color: panel, opacity: 0.94, radius: 6 });
-                label("Hold X: sniff  |  WASD / Arrows: move  |  Esc: title", 24, 24, 16, white, "left");
+                label(`${mapName}  |  Hold X: sniff  |  WASD / Arrows: move  |  Esc: maps`, 24, 24, 15, white, "left");
                 const last = inventory.at(-1);
                 label(`Coins: ${session.coins}  |  Bag: ${inventory.length}${last ? `  |  Last: ${last.rarity} ${last.name}` : ""}`, 24, 49, 15, white, "left");
 

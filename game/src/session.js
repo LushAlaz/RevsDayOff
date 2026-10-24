@@ -1,10 +1,11 @@
 import { ITEMS, RARITIES } from "./items.js";
 
-export const session = { inventory: [], coins: 0 };
+export const session = { inventory: [], coins: 0, mapId: "kyle-field" };
 
 export function startNewGame() {
     session.inventory.length = 0;
     session.coins = 0;
+    session.mapId = "kyle-field";
 }
 
 export function getInventoryRows(state = session) {

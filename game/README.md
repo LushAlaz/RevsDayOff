@@ -6,9 +6,37 @@
 
 ## Development
 
+### Campus map selection
+
+Play starts a new session and opens a pixel-style campus map inspired by
+[Texas A&M's Aggie Map](https://aggiemap.tamu.edu/). Click a landmark pin or label
+to travel, or use **arrow keys** and **Enter**. The selector remembers the last
+visited area and shows its size and description. This is a stylized game map,
+not a campus navigation tool.
+
+| Area | World size | Terrain |
+| --- | --- | --- |
+| Kyle Field | 1440 x 640 | Football field with end zones and midfield logo |
+| Aggie Park | 1920 x 960 | Larger lawns, paths, pond, trees, and benches |
+| Drill Field | 1080 x 480 | Smaller Simpson Drill Field lawn and perimeter paths |
+
+**Esc** from exploration opens the selector without resetting coins or inventory.
+During a loot challenge, Esc cancels the attempt first. The selector's **Back to
+Title / Esc** returns to the title; starting Play again resets the session.
+
+Every map has the same shop at (24, 24), with doorway (104, 204). Both shop exits
+return to the originating map at (104, 252). The pond, tree trunks, benches, and
+shop base block movement. Loot is generated on clear reachable ground, with 12
+fresh locations whenever a playable map is entered, including shop returns.
+
+For repeatable travel QA, open `/tests/maps-preview.html` on the dev server. Its
+buttons place Reveille at each map's shop doorway with a test bag and 50 coins.
+Enter the shop with Space, sell or leave, and verify the originating map and
+shared bag/balance. This preview is not part of the production entry point.
+
 ### Sniffing and hidden loot
 
-Hold **X** on Kyle Field to sniff while moving at half speed. Scent particles and
+Hold **X** in any playable area to sniff while moving at half speed. Scent particles and
 distance hints guide you toward the nearest hidden item: **Not close.** beyond
 200 world pixels, **You're close!** within 200, and **You're here!** within 40.
 Releasing X restores normal movement. Each field entry creates 12 new hidden
@@ -69,7 +97,7 @@ entry point. Use `node --test tests/*.test.js` for the automated checks.
 
 ### Good Bull shop
 
-The compact flat 2D RPG shop is in the top-left corner of Kyle Field. Walk to
+The compact flat 2D RPG shop is in the top-left corner of every map. Walk to
 its bottom-center entrance and press **Space** when **Space: Enter Shop** appears.
 The building base blocks movement. Inside, walk around the counter and shelves;
 press **Space** near the right-hand exit, or **Esc** with the selling menu closed, to return below
@@ -88,7 +116,7 @@ its doorway is at (104, 204), and returning from the shop spawns Reveille at
 
 ### Field controls
 
-Select **Play** to enter the Kyle Field movement test area as Reveille.
+Select **Play**, then choose Kyle Field, Aggie Park, or Drill Field to explore as Reveille.
 Move with **WASD** or the **arrow keys**. Reveille uses the eleven-frame
 `public/sprites/Reveille.png` sheet at 64 × 64 world pixels, with walking
 animations at 8 FPS. Left uses frames 6–8 and right uses frames 9–10, without mirroring;
@@ -96,7 +124,7 @@ diagonals face
 horizontally. Releasing movement returns to an idle pose facing the last direction.
 **W / Up arrow** moves up and **S / Down arrow** moves down. Field hash marks
 provide a visible reference while the camera follows vertical movement.
-Press **Esc** to return to the title. Movement stops immediately when released,
+Press **Esc** to return to the map selector. Movement stops immediately when released,
 and diagonals travel at the same 300 pixels/second as cardinal directions.
 The compact field is 1440 × 640 world pixels, including two 120-pixel maroon
 end zones. It has alternating turf bands, five-yard lines, one-yard hashes,

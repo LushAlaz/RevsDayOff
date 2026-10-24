@@ -31,7 +31,7 @@ export function addSceneEntrance(player, { point, label, target, args, radius = 
     return prompt;
 }
 
-export function addFieldShop(player, canInteract = () => true) {
+export function addFieldShop(player, canInteract = () => true, mapId = "kyle-field") {
     add([
         sprite("good-bull-shop", { width: SHOP.width, height: SHOP.height }),
         pos(SHOP.position.x, SHOP.position.y), z(1),
@@ -41,6 +41,6 @@ export function addFieldShop(player, canInteract = () => true) {
         z(2), outline(3, rgb(30, 25, 25)),
     ]);
     addSceneEntrance(player, {
-        point: SHOP.entrance, label: "Space: Enter Shop", target: "shop", canInteract,
+        point: SHOP.entrance, label: "Space: Enter Shop", target: "shop", args: { mapId }, canInteract,
     });
 }

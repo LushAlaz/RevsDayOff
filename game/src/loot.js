@@ -9,11 +9,11 @@ export function rollRarity(random = Math.random) {
     return "Legendary";
 }
 
-export function generateLoot({ bounds, obstacle, entrance, count = 12, random = Math.random }) {
+export function generateLoot({ bounds, obstacle, obstacles = obstacle ? [obstacle] : [], entrance, count = 12, random = Math.random }) {
     const spots = [];
     function place(position) {
-        if (position.x > obstacle.left - 64 && position.x < obstacle.right + 64
-            && position.y > obstacle.top - 64 && position.y < obstacle.bottom + 64) return;
+        if (obstacles.some((solid) => position.x > solid.left - 64 && position.x < solid.right + 64
+            && position.y > solid.top - 64 && position.y < solid.bottom + 64)) return;
         if (Math.hypot(position.x - entrance.x, position.y - entrance.y) < 112) return;
         if (spots.some((spot) => Math.hypot(position.x - spot.position.x, position.y - spot.position.y) < 140)) return;
         const rarity = rollRarity(random);

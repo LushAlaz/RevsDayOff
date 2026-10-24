@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SHOP, isNearEntrance, addSceneEntrance } from "../src/shop.js";
 import { FIELD_LAYOUT } from "../src/field.js";
+import { getShopReturn } from "../src/maps.js";
 
 test("entrance accepts nearby positions including the radius and rejects distant ones", () => {
     assert.equal(isNearEntrance(SHOP.returnSpawn, SHOP.entrance), true);
@@ -55,11 +56,11 @@ test("exit transition carries the doorway return spawn", () => {
     globalThis.go = (...args) => { destination = args; };
     const player = { pos: { x: 856, y: 400 }, onUpdate() {} };
     addSceneEntrance(player, {
-        point: player.pos, label: "Space: Return to Kyle Field", target: "mapSelect",
-        args: { spawn: SHOP.returnSpawn },
+        point: player.pos, label: "Space: Return to Aggie Park", target: "explore",
+        args: getShopReturn("aggie-park"),
     });
     press();
-    assert.deepEqual(destination, ["mapSelect", { spawn: SHOP.returnSpawn }]);
+    assert.deepEqual(destination, ["explore", { mapId: "aggie-park", spawn: SHOP.returnSpawn }]);
 });
 
 test("interaction gate hides the prompt and blocks Space during other activities", () => {

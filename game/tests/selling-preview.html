@@ -9,7 +9,8 @@
 import "../src/setup.js";
 import "../src/scenes/shop.js";
 import "../src/scenes/map.js";
-import "../src/scenes/title.js";
+import { titleScene } from "../src/scenes/title.js";
+import { leaderboardScene } from "../src/scenes/leaderboard.js";
 import { loadSprites } from "../src/sprites.js";
 import { ITEMS } from "../src/items.js";
 import { session, startNewGame } from "../src/session.js";
@@ -18,6 +19,8 @@ import { createSellingController } from "../src/selling.js";
 import { addSellingUI } from "../src/selling-ui.js";
 loadRoot("/");
 loadSprites();
+titleScene();
+leaderboardScene();
 function refill() {
     startNewGame();
     session.inventory.push(...ITEMS.map((item) => ({ ...item })), { ...ITEMS.find((item) => item.id === "ring") });
