@@ -6,6 +6,27 @@
 
 ## Development
 
+### Good Bull shop
+
+The compact flat 2D RPG shop is in the top-left corner of Kyle Field. Walk to
+its bottom-center entrance and press **Space** when **Space: Enter Shop** appears.
+The building base blocks movement. Inside, walk around the counter and shelves;
+press **Space** near the right-hand exit, or **Esc** anywhere, to return below
+the field entrance. Buying items is not implemented yet.
+
+`public/sprites/good-bull-2d.png` was created with the built-in image generator,
+using `public/sprites/good-bull-preview.png` as the reference and transparency enabled.
+Final prompt:
+
+> Create a small original 2D top-down RPG shop sprite using the reference ONLY for Good Bull identity and colors. Style: classic 16-bit handheld monster-catching RPG town building, deliberately flat tile-based pixel art. STRICT straight-on orthographic view from slightly overhead: rectangular visible gray tiled roof above a short dark navy front wall; ALL roof/front edges horizontal or vertical except tiny symmetric roof eaves. Absolutely NO isometric view, NO angled side wall, NO perspective convergence, NO diagonally slanted facade, NO 3D rendering, NO gradients, NO realistic lighting. Front door centered on bottom edge facing down toward player, cream GOOD BULL sign on front above doorway, small matching windows on both sides. Simple shapes, crisp chunky square pixels, limited navy gray cream maroon palette and 2 or 3 flat tones per material. It must read clearly when displayed at 160x180 game pixels, like a native low-resolution 80x90 sprite enlarged with nearest-neighbor. Transparent alpha background, tightly framed entire single building including roof and narrow foundation, centered, no characters, no grass or sky or background, no scenery. Keep exact text GOOD BULL; omit secondary message board. Main goal: replace the previously overly 3D building with convincing FLAT 2D RPG pixel art.
+
+The earlier `good-bull-right.png` and original preview remain available but are
+not used for the current exterior. The building occupies 160 by 180 world pixels;
+its doorway is at (104, 204), and returning from the shop spawns Reveille at
+(104, 252), safely below its solid base.
+
+### Field controls
+
 Select **Play** to enter the Kyle Field movement test area as Reveille.
 Move with **WASD** or the **arrow keys**. Reveille uses the eleven-frame
 `public/sprites/Reveille.png` sheet at 64 × 64 world pixels, with walking

@@ -145,3 +145,28 @@ test("continuous walking does not restart animation and diagonals face horizonta
     player.update();
     assert.equal(player.animation, "up");
 });
+
+test("obstacles stop movement from every side, including long frames", () => {
+    const obstacle = { left: 200, top: 200, right: 300, bottom: 300 };
+    for (const [spawn, key, expected] of [
+        [{ x: 120, y: 250 }, "d", { x: 168, y: 250 }],
+        [{ x: 400, y: 250 }, "a", { x: 332, y: 250 }],
+        [{ x: 250, y: 120 }, "s", { x: 250, y: 168 }],
+        [{ x: 250, y: 400 }, "w", { x: 250, y: 332 }],
+    ]) {
+        keys = new Set([key]);
+        delta = 2;
+        const player = addPlayer({ spawn, obstacles: [obstacle] });
+        player.update();
+        assert.deepEqual(player.pos, expected);
+    }
+});
+
+test("diagonal movement slides along obstacle sides", () => {
+    const player = addPlayer({ spawn: { x: 168, y: 250 },
+        obstacles: [{ left: 200, top: 200, right: 300, bottom: 300 }] });
+    keys = new Set(["d", "s"]);
+    player.update();
+    assert.equal(player.pos.x, 168);
+    assert.ok(player.pos.y > 250);
+});

@@ -2,6 +2,13 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadSprites } from "../src/sprites.js";
 
+test("shop uses the flat RPG exterior asset", () => {
+    const calls = [];
+    globalThis.loadSprite = (name, path) => calls.push({ name, path });
+    loadSprites();
+    assert.ok(calls.some(({ name, path }) => name === "good-bull-shop" && path === "sprites/good-bull-2d.png"));
+});
+
 test("midfield logo loads from a local asset", () => {
     const calls = [];
     globalThis.loadSprite = (name, path) => calls.push({ name, path });

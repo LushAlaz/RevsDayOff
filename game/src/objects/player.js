@@ -2,6 +2,7 @@
 export function addPlayer({
     spawn = { x: 120, y: 120 },
     speed = 300,
+    obstacles = [],
     bounds = () => ({ left: 0, top: 0, right: width(), bottom: height() }),
 } = {}) {
     const player = add([
@@ -13,6 +14,27 @@ export function addPlayer({
     const idleFrames = { down: 0, up: 3, right: 9, left: 6 };
     let facing = "down";
     let walking = false;
+
+    function moveAxis(axis, velocity) {
+        const before = player.pos[axis];
+        player.move(axis === "x" ? velocity : 0, axis === "y" ? velocity : 0);
+        const other = axis === "x" ? "y" : "x";
+        const halfSize = (axis === "x" ? player.width : player.height) / 2;
+        const otherHalf = (axis === "x" ? player.height : player.width) / 2;
+        for (const obstacle of obstacles) {
+            const near = axis === "x" ? obstacle.left : obstacle.top;
+            const far = axis === "x" ? obstacle.right : obstacle.bottom;
+            const otherNear = axis === "x" ? obstacle.top : obstacle.left;
+            const otherFar = axis === "x" ? obstacle.bottom : obstacle.right;
+            if (player.pos[other] + otherHalf <= otherNear || player.pos[other] - otherHalf >= otherFar) continue;
+            // Sweep the movement segment so even a long frame cannot cross the building.
+            if (velocity > 0 && before + halfSize <= near) {
+                player.pos[axis] = Math.min(player.pos[axis], near - halfSize);
+            } else if (velocity < 0 && before - halfSize >= far) {
+                player.pos[axis] = Math.max(player.pos[axis], far + halfSize);
+            }
+        }
+    }
 
     function keepInsideField() {
         const field = typeof bounds === "function" ? bounds() : bounds;
@@ -42,7 +64,9 @@ export function addPlayer({
                 walking = true;
             }
             // move() applies delta time; normalization keeps diagonal speed equal.
-            player.move(x / length * speed, y / length * speed);
+            // Resolve axes separately to slide along walls instead of sticking to them.
+            moveAxis("x", x / length * speed);
+            moveAxis("y", y / length * speed);
         } else if (walking) {
             player.stop();
             player.frame = idleFrames[facing];
