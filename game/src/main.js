@@ -1,39 +1,20 @@
 import kaplay from "kaplay";
 import "kaplay/global";
+import { titleScene } from "./scenes/title.js";
+import { mapSelectScene } from "./scenes/map.js";
 
 kaplay();
 
 function loadSprites() {
     loadSprite("bean", "sprites/bean.png");
-    loadSprite("mark", "sprites/mark.png")
+    // loadSprite("mark", "sprites/mark.png"); // mark.png doesn't exist yet
 }
 
 // loadRoot("./public/"); // A good idea for Itch.io publishing later
 
-const SPD = 300
+loadSprites();
 
+titleScene();
+mapSelectScene();
 
-let player = add([
-    pos(120, 80),
-    sprite("bean")
-]);
-
-
-
-onKeyDown("left", () => {
-    player.move(-SPD, 0);
-});
-
-onKeyDown("right", () => {
-    player.move(SPD, 0);
-});
-
-onKeyDown("up", () => {
-    player.move(0, -SPD);
-});
-
-onKeyDown("down", () => {
-    player.move(0, SPD);
-});
-
-onClick(() => addKaboom(mousePos()));
+go("title");
