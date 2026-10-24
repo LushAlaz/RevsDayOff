@@ -14,7 +14,7 @@ function seeded(seed) {
     };
 }
 function fixture(rarity = "Common") {
-    const spot = { id: 0, position: { x: 400, y: 300 }, item: ITEMS[0], rarity, collected: false };
+    const spot = { id: 0, position: { x: 400, y: 300 }, item: ITEMS.find((item) => item.rarity === rarity), rarity, collected: false };
     const inventory = [];
     const controller = createLootController({ spots: [spot], inventory, random: () => 0.5 });
     return { spot, inventory, controller };
@@ -36,8 +36,35 @@ test("random loot is reachable, spaced apart, and excluded from shop and entranc
             }
             assert.ok(ITEMS.includes(spot.item));
             assert.ok(RARITIES[spot.rarity]);
+            assert.equal(spot.rarity, spot.item.rarity);
         }
     }
+});
+
+test("rarity-first selection chooses uniformly within the fixed-rarity catalog", () => {
+    for (const [roll, rarity] of [[0.2, "Common"], [0.7, "Rare"], [0.9, "Epic"], [0.99, "Legendary"]]) {
+        const candidates = ITEMS.filter((item) => item.rarity === rarity);
+        for (let index = 0; index < candidates.length; index++) {
+            const values = [0.5, 0.5, roll, (index + 0.5) / candidates.length];
+            const [spot] = generateLoot({ bounds: FIELD_LAYOUT.bounds, obstacle: SHOP.obstacle,
+                entrance: SHOP.entrance, count: 1, random: () => values.shift() });
+            assert.equal(spot.rarity, rarity);
+            assert.equal(spot.item, candidates[index]);
+        }
+    }
+});
+
+test("Aggie Ring always uses Legendary challenge settings and reward labeling", () => {
+    const inventory = [];
+    const item = ITEMS.find((entry) => entry.id === "ring");
+    const spot = { id: 0, position: { x: 400, y: 300 }, item, rarity: "Common", collected: false };
+    const controller = createLootController({ spots: [spot], inventory, random: () => 0.5 });
+    controller.step(0, true, spot.position);
+    controller.step(0.6, true, spot.position);
+    assert.equal(controller.angle, 180);
+    assert.equal(controller.active.rarity, "Legendary");
+    controller.stopSpinner();
+    assert.equal(inventory[0].rarity, "Legendary");
 });
 
 test("placement uses a bounded safe fallback with a pathological random source", () => {

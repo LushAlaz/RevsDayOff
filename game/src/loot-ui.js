@@ -1,4 +1,5 @@
 import { RARITIES } from "./items.js";
+import { session } from "./session.js";
 
 export function addLootUI(player, loot, inventory) {
     const sniffLabel = add([
@@ -36,7 +37,7 @@ export function addLootUI(player, loot, inventory) {
                 drawRect({ pos: vec2(10, 10), width: width() - 20, height: 58, color: panel, opacity: 0.94, radius: 6 });
                 label("Hold X: sniff  |  WASD / Arrows: move  |  Esc: title", 24, 24, 16, white, "left");
                 const last = inventory.at(-1);
-                label(`Bag: ${inventory.length}${last ? `  |  Last: ${last.rarity} ${last.name}` : ""}`, 24, 49, 15, white, "left");
+                label(`Coins: ${session.coins}  |  Bag: ${inventory.length}${last ? `  |  Last: ${last.rarity} ${last.name}` : ""}`, 24, 49, 15, white, "left");
 
                 if (loot.phase === "exploration" && loot.sniffing) {
                     drawRect({ pos: vec2(cx - 210, 80), width: 420, height: 40, color: panel, radius: 6 });

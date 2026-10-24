@@ -16,8 +16,10 @@ export function generateLoot({ bounds, obstacle, entrance, count = 12, random = 
             && position.y > obstacle.top - 64 && position.y < obstacle.bottom + 64) return;
         if (Math.hypot(position.x - entrance.x, position.y - entrance.y) < 112) return;
         if (spots.some((spot) => Math.hypot(position.x - spot.position.x, position.y - spot.position.y) < 140)) return;
-        spots.push({ id: spots.length, position, item: ITEMS[Math.floor(random() * ITEMS.length)],
-            rarity: rollRarity(random), collected: false });
+        const rarity = rollRarity(random);
+        const candidates = ITEMS.filter((item) => item.rarity === rarity);
+        spots.push({ id: spots.length, position, item: candidates[Math.floor(random() * candidates.length)],
+            rarity, collected: false });
     }
     for (let attempt = 0; attempt < 2000 && spots.length < count; attempt++) {
         place({
@@ -47,6 +49,8 @@ export function isTimingHit(angle, target, arc) {
 }
 
 export function createLootController({ spots, inventory, random = Math.random }) {
+    // Challenge difficulty and awards always follow the collectible's fixed rarity.
+    for (const spot of spots) spot.rarity = spot.item.rarity;
     const state = {
         phase: "exploration", spots, hint: "", sniffing: false, active: null,
         elapsed: 0, angle: 0, target: 0, result: null, releaseRequired: false,

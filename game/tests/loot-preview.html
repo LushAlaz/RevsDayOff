@@ -22,7 +22,7 @@ scene("preview", (rarity = "Common") => {
     setCamPos(center());
     const inventory = [];
     loot = createLootController({ spots: [{ id: 0, position: { x: 480, y: 270 },
-        item: ITEMS[rarity === "Legendary" ? 2 : rarity === "Epic" ? 1 : 0], rarity, collected: false }],
+        item: ITEMS.find((item) => item.rarity === rarity), rarity, collected: false }],
         inventory, random: () => 0.5 });
     const player = addPlayer({ spawn: { x: 480, y: 270 }, inventory,
         getMovementState: () => ({ locked: loot.phase === "challenge", sniffing: isKeyDown("x") }) });
@@ -41,7 +41,7 @@ scene("reward-preview", () => {
     setBackground(rgb(43, 103, 61));
     const inventory = [];
     const position = { x: 480, y: 270 };
-    const spot = { id: 0, position, item: ITEMS[2], rarity: "Legendary", collected: false };
+    const spot = { id: 0, position, item: ITEMS.find((item) => item.id === "ring"), rarity: "Legendary", collected: false };
     const rewardLoot = createLootController({ spots: [spot], inventory, random: () => 0.5 });
     const player = addPlayer({ spawn: position });
     rewardLoot.step(0, true, position);

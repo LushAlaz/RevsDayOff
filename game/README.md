@@ -27,10 +27,40 @@ the spot. Release X after an attempt before sniffing again.
 | Epic | 12% | 240 degrees/second | 40 degrees |
 | Legendary | 3% | 300 degrees/second | 24 degrees |
 
-Towels, jerseys, and rings use the existing item artwork; rarity is rolled
-independently of item type. The HUD shows bag count and the latest find. Inventory
-survives shop visits and resets on a new Play from the title or browser reload.
-There is no selling or inventory-management screen yet.
+Rarity is rolled first, then an item is selected uniformly from that tier. Each
+item has one fixed rarity, which determines its timing challenge and sale price.
+The HUD shows coins, bag count, and the latest find. Inventory and coins survive
+shop visits and reset on a new Play from the title or browser reload.
+
+### Selling loot
+
+Walk below the shop counter and press **Space** at the **Space: Sell items** prompt.
+Select a row with the mouse or **Up/Down**, then click **Sell One** or press **Enter**.
+Click **Sell All** or press **A** to sell the entire bag at its displayed total.
+Sales are immediate. **Esc** or the menu's **X** button closes it; Esc outside the
+menu returns to the field. Movement and the exit interaction pause while selling.
+Duplicate items share a row; quantities and coin balances update after each sale.
+
+| Item | Fixed rarity | Coins each |
+| --- | --- | ---: |
+| Aggie Ring | Legendary | 150 |
+| Century Tree Branch | Epic | 50 |
+| Marcel Reed Jersey | Rare | 20 |
+| 12th Man Towel | Rare | 20 |
+| A&M T-shirt | Common | 5 |
+| A&M Hat | Common | 5 |
+| Maroon Meal | Common | 5 |
+
+Good Bull Section is not in the loot catalog. Buying items is deferred.
+Open `/tests/selling-preview.html` on the dev server for a populated menu with all
+seven item types and a duplicate ring. The preview can refill its test bag or open
+the actual shop; it is not included in the production entry point.
+
+`public/sprites/century-tree-branch.png` was created with the built-in image generator,
+referencing `public/sprites/aggie-tshirt.png` for the pixel-art style, with transparency enabled.
+Final prompt:
+
+> Create a single transparent pixel-art inventory icon of a Century Tree Branch for a Texas A&M-themed top-down 2D RPG. Match the supplied shirt icon's crisp chunky low-resolution pixel-art style and limited palette, like a native 32 by 32 sprite enlarged with nearest-neighbor. Subject: one small brown live-oak twig angled from lower left to upper right, branching into two tips, with three clusters of green oak leaves. Simple readable silhouette, flat 2-tone shading, dark pixel outline, earthy brown and muted leafy green. Entire icon centered in a square canvas with a small transparent margin. Actual alpha transparency. No text, no frame, no background, no ground, no extra objects, no gradients, no 3D rendering. Only one branch icon, not a sprite sheet.
 
 For repeatable visual QA, open `/tests/loot-preview.html` on the dev server.
 Its buttons select a known nearby spot of each rarity, and **Show reward** renders
@@ -42,7 +72,7 @@ entry point. Use `node --test tests/*.test.js` for the automated checks.
 The compact flat 2D RPG shop is in the top-left corner of Kyle Field. Walk to
 its bottom-center entrance and press **Space** when **Space: Enter Shop** appears.
 The building base blocks movement. Inside, walk around the counter and shelves;
-press **Space** near the right-hand exit, or **Esc** anywhere, to return below
+press **Space** near the right-hand exit, or **Esc** with the selling menu closed, to return below
 the field entrance. Buying items is not implemented yet.
 
 `public/sprites/good-bull-2d.png` was created with the built-in image generator,

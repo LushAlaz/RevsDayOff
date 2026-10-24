@@ -1,6 +1,8 @@
 import { addPlayer } from "../objects/player.js";
 import { SHOP, addSceneEntrance } from "../shop.js";
 import { session } from "../session.js";
+import { createSellingController } from "../selling.js";
+import { addSellingUI } from "../selling-ui.js";
 
 scene("shop", () => {
     setCamPos(center());
@@ -11,6 +13,7 @@ scene("shop", () => {
         { left: 120, top: 108, right: 360, bottom: 152 },
         { left: 420, top: 108, right: 660, bottom: 152 },
     ];
+    const selling = createSellingController();
 
     function furnishing(box, tint) {
         add([
@@ -40,14 +43,20 @@ scene("shop", () => {
     add([text("EXIT", { size: 16 }), pos(864, 350), anchor("center")]);
     const player = addPlayer({
         spawn: { x: 760, y: 400 }, bounds, obstacles: [counter, ...shelves], inventory: session.inventory,
+        getMovementState: () => ({ locked: selling.open, sniffing: false }),
     });
+    addSellingUI(player, selling);
     addSceneEntrance(player, {
         point: { x: 856, y: 400 }, label: "Space: Return to Kyle Field", target: "mapSelect",
         args: { spawn: SHOP.returnSpawn },
+        canInteract: () => !selling.open,
     });
     add([
         text("Move: WASD / Arrows    |    Esc: Return to Kyle Field", { size: 16 }),
         pos(center().x, 78), anchor("center"),
     ]);
-    onKeyPress("escape", () => go("mapSelect", { spawn: SHOP.returnSpawn }));
+    onKeyPress("escape", () => {
+        if (selling.open) selling.close();
+        else go("mapSelect", { spawn: SHOP.returnSpawn });
+    });
 });

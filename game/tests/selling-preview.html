@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>Selling visual test</title></head>
+<body style="margin:0;overflow:hidden">
+<nav style="position:fixed;left:12px;bottom:8px;z-index:1000">
+  <button id="refill">Refill bag</button><button id="shop">Open actual shop</button>
+</nav>
+<script type="module">
+import "../src/setup.js";
+import "../src/scenes/shop.js";
+import "../src/scenes/map.js";
+import "../src/scenes/title.js";
+import { loadSprites } from "../src/sprites.js";
+import { ITEMS } from "../src/items.js";
+import { session, startNewGame } from "../src/session.js";
+import { addPlayer } from "../src/objects/player.js";
+import { createSellingController } from "../src/selling.js";
+import { addSellingUI } from "../src/selling-ui.js";
+loadRoot("/");
+loadSprites();
+function refill() {
+    startNewGame();
+    session.inventory.push(...ITEMS.map((item) => ({ ...item })), { ...ITEMS.find((item) => item.id === "ring") });
+}
+scene("preview", () => {
+    setCamPos(center());
+    setBackground(rgb(60, 76, 66));
+    const selling = createSellingController();
+    const player = addPlayer({ spawn: { x: 400, y: 280 }, inventory: session.inventory,
+        getMovementState: () => ({ locked: selling.open, sniffing: false }) });
+    addSellingUI(player, selling);
+    onKeyPress("escape", () => selling.close());
+    selling.openMenu();
+});
+document.querySelector("#refill").onclick = () => { refill(); go("preview"); };
+document.querySelector("#shop").onclick = () => go("shop");
+refill();
+go("preview");
+</script>
+</body>
+</html>
