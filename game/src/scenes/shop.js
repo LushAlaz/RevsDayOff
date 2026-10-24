@@ -1,5 +1,6 @@
 import { addPlayer } from "../objects/player.js";
 import { SHOP, addSceneEntrance } from "../shop.js";
+import { session } from "../session.js";
 
 scene("shop", () => {
     setCamPos(center());
@@ -38,7 +39,7 @@ scene("shop", () => {
     add([rect(32, 72), pos(848, 364), color(68, 102, 80)]);
     add([text("EXIT", { size: 16 }), pos(864, 350), anchor("center")]);
     const player = addPlayer({
-        spawn: { x: 760, y: 400 }, bounds, obstacles: [counter, ...shelves],
+        spawn: { x: 760, y: 400 }, bounds, obstacles: [counter, ...shelves], inventory: session.inventory,
     });
     addSceneEntrance(player, {
         point: { x: 856, y: 400 }, label: "Space: Return to Kyle Field", target: "mapSelect",

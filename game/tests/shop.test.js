@@ -61,3 +61,26 @@ test("exit transition carries the doorway return spawn", () => {
     press();
     assert.deepEqual(destination, ["mapSelect", { spawn: SHOP.returnSpawn }]);
 });
+
+test("interaction gate hides the prompt and blocks Space during other activities", () => {
+    let allowed = false;
+    let press;
+    let update;
+    const calls = [];
+    globalThis.onKeyPress = (_key, callback) => { press = callback; };
+    globalThis.go = (...args) => calls.push(args);
+    const player = { pos: SHOP.returnSpawn, onUpdate(fn) { update = fn; } };
+    const prompt = addSceneEntrance(player, {
+        point: SHOP.entrance, label: "Space: Enter Shop", target: "shop",
+        canInteract: () => allowed,
+    });
+    update();
+    press();
+    assert.equal(prompt.hidden, true);
+    assert.equal(calls.length, 0);
+    allowed = true;
+    update();
+    assert.equal(prompt.hidden, false);
+    press();
+    assert.equal(calls.length, 1);
+});

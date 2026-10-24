@@ -12,7 +12,7 @@ export function isNearEntrance(position, point, radius = SHOP.radius) {
     return Math.hypot(position.x - point.x, position.y - point.y) <= radius;
 }
 
-export function addSceneEntrance(player, { point, label, target, args, radius = SHOP.radius }) {
+export function addSceneEntrance(player, { point, label, target, args, radius = SHOP.radius, canInteract = () => true }) {
     const prompt = add([
         rect(360, 40, { radius: 6 }), pos(center().x, height() - 28),
         anchor("center"), fixed(), z(20), color(50, 16, 24),
@@ -21,17 +21,17 @@ export function addSceneEntrance(player, { point, label, target, args, radius = 
     prompt.hidden = true;
     let transitioning = false;
     player.onUpdate(() => {
-        prompt.hidden = !isNearEntrance(player.pos, point, radius);
+        prompt.hidden = !canInteract() || !isNearEntrance(player.pos, point, radius);
     });
     onKeyPress("space", () => {
-        if (transitioning || !isNearEntrance(player.pos, point, radius)) return;
+        if (transitioning || !canInteract() || !isNearEntrance(player.pos, point, radius)) return;
         transitioning = true;
         go(target, args);
     });
     return prompt;
 }
 
-export function addFieldShop(player) {
+export function addFieldShop(player, canInteract = () => true) {
     add([
         sprite("good-bull-shop", { width: SHOP.width, height: SHOP.height }),
         pos(SHOP.position.x, SHOP.position.y), z(1),
@@ -41,6 +41,6 @@ export function addFieldShop(player) {
         z(2), outline(3, rgb(30, 25, 25)),
     ]);
     addSceneEntrance(player, {
-        point: SHOP.entrance, label: "Space: Enter Shop", target: "shop",
+        point: SHOP.entrance, label: "Space: Enter Shop", target: "shop", canInteract,
     });
 }

@@ -170,3 +170,21 @@ test("diagonal movement slides along obstacle sides", () => {
     assert.equal(player.pos.x, 168);
     assert.ok(player.pos.y > 250);
 });
+
+test("sniffing halves movement speed and locking stops all input directions", () => {
+    let movement = { sniffing: true, locked: false };
+    const player = addPlayer({ getMovementState: () => movement });
+    keys = new Set(["d"]);
+    player.update();
+    assert.equal(player.pos.x, 122.5);
+    movement = { sniffing: false, locked: false };
+    player.update();
+    assert.equal(player.pos.x, 127.5);
+    movement = { sniffing: false, locked: true };
+    for (const key of ["a", "w", "s", "d"]) {
+        keys = new Set([key]);
+        player.update();
+        assert.deepEqual(player.pos, { x: 127.5, y: 120 });
+        assert.equal(player.animation, null);
+    }
+});

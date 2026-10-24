@@ -6,6 +6,37 @@
 
 ## Development
 
+### Sniffing and hidden loot
+
+Hold **X** on Kyle Field to sniff while moving at half speed. Scent particles and
+distance hints guide you toward the nearest hidden item: **Not close.** beyond
+200 world pixels, **You're close!** within 200, and **You're here!** within 40.
+Releasing X restores normal movement. Each field entry creates 12 new hidden
+spots, including returning from the shop; collected items remain in your bag.
+
+Finding a spot while sniffing opens a circular timing challenge. Movement and
+shop entry pause. Press **Space** when the white pointer is in the green target
+arc; you have six seconds. **Esc** cancels the attempt. Success collects the item
+and removes that spot. A miss, cancellation, or timeout keeps the same reward at
+the spot. Release X after an attempt before sniffing again.
+
+| Rarity | Chance | Spinner speed | Target arc |
+| --- | ---: | ---: | ---: |
+| Common | 60% | 120 degrees/second | 90 degrees |
+| Rare | 25% | 180 degrees/second | 60 degrees |
+| Epic | 12% | 240 degrees/second | 40 degrees |
+| Legendary | 3% | 300 degrees/second | 24 degrees |
+
+Towels, jerseys, and rings use the existing item artwork; rarity is rolled
+independently of item type. The HUD shows bag count and the latest find. Inventory
+survives shop visits and resets on a new Play from the title or browser reload.
+There is no selling or inventory-management screen yet.
+
+For repeatable visual QA, open `/tests/loot-preview.html` on the dev server.
+Its buttons select a known nearby spot of each rarity, and **Show reward** renders
+a completed Legendary ring reward. This preview is not included in the production
+entry point. Use `node --test tests/*.test.js` for the automated checks.
+
 ### Good Bull shop
 
 The compact flat 2D RPG shop is in the top-left corner of Kyle Field. Walk to

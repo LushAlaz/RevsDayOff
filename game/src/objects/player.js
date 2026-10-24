@@ -2,6 +2,8 @@
 export function addPlayer({
     spawn = { x: 120, y: 120 },
     speed = 300,
+    getMovementState = () => ({ locked: false, sniffing: false }),
+    inventory = [],
     obstacles = [],
     bounds = () => ({ left: 0, top: 0, right: width(), bottom: height() }),
 } = {}) {
@@ -9,7 +11,7 @@ export function addPlayer({
         pos(spawn.x, spawn.y),
         sprite("reveille", { width: 64, height: 64, frame: 0 }),
         anchor("center"),
-        { items: [] },
+        { items: inventory },
     ]);
     const idleFrames = { down: 0, up: 3, right: 9, left: 6 };
     let facing = "down";
@@ -50,9 +52,10 @@ export function addPlayer({
     }
 
     player.onUpdate(() => {
-        const x = Number(isKeyDown("d") || isKeyDown("right"))
+        const movement = getMovementState();
+        const x = movement.locked ? 0 : Number(isKeyDown("d") || isKeyDown("right"))
             - Number(isKeyDown("a") || isKeyDown("left"));
-        const y = Number(isKeyDown("s") || isKeyDown("down"))
+        const y = movement.locked ? 0 : Number(isKeyDown("s") || isKeyDown("down"))
             - Number(isKeyDown("w") || isKeyDown("up"));
         const length = Math.hypot(x, y);
         if (length > 0) {
@@ -65,8 +68,9 @@ export function addPlayer({
             }
             // move() applies delta time; normalization keeps diagonal speed equal.
             // Resolve axes separately to slide along walls instead of sticking to them.
-            moveAxis("x", x / length * speed);
-            moveAxis("y", y / length * speed);
+            const currentSpeed = movement.sniffing ? speed / 2 : speed;
+            moveAxis("x", x / length * currentSpeed);
+            moveAxis("y", y / length * currentSpeed);
         } else if (walking) {
             player.stop();
             player.frame = idleFrames[facing];

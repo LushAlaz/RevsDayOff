@@ -1,6 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { loadSprites } from "../src/sprites.js";
+import { ITEMS } from "../src/items.js";
+import { readFileSync } from "node:fs";
+
+test("reward sheets are sliced into individual square item frames", () => {
+    const calls = [];
+    globalThis.loadSprite = (name, path, options) => calls.push({ name, path, options });
+    loadSprites();
+    for (const item of ITEMS) {
+        const png = readFileSync(new URL(`../public/${item.path}`, import.meta.url));
+        assert.equal(png.readUInt32BE(16) / item.sliceX, png.readUInt32BE(20));
+        assert.deepEqual(calls.find((call) => call.name === item.sprite).options, { sliceX: item.sliceX });
+    }
+});
 
 test("shop uses the flat RPG exterior asset", () => {
     const calls = [];

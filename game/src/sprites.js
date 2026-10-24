@@ -1,7 +1,10 @@
+import { ITEMS } from "./items.js";
+
 export function loadSprites() {
-    loadBean()
+    loadSprite("bean", "sprites/bean.png");
     loadSprite("tam-logo", "sprites/tam-maroon.svg");
     loadSprite("good-bull-shop", "sprites/good-bull-2d.png");
+    for (const item of ITEMS) loadSprite(item.sprite, item.path, { sliceX: item.sliceX });
     loadSprite("reveille", "sprites/Reveille.png", {
         sliceX: 11,
         anims: {

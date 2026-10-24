@@ -1,18 +1,2 @@
-export function addItem(position, rarity) {
-    const Rarity = {
-        Common: 1,
-        Rare: 2,
-        Epic: 3,
-        Legendary: 4
-    }
-    
-    let item = add([
-        pos(position),
-        sprite("bean"),
-        {
-            rarity: rarity
-        }
-    ])
-
-    return item
-}
+// Item metadata is shared by hidden loot, reward cards, and the session bag.
+export { ITEMS, RARITIES } from "../items.js";
