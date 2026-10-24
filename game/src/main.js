@@ -1,10 +1,14 @@
 import kaplay from "kaplay";
-import "kaplay/global"; // uncomment if you want to use without the k. prefix
+import "kaplay/global";
 
 kaplay();
 
+function loadSprites() {
+    loadSprite("bean", "sprites/bean.png");
+    loadSprite("mark", "sprites/mark.png")
+}
+
 // loadRoot("./public/"); // A good idea for Itch.io publishing later
-loadSprite("bean", "sprites/bean.png");
 
 const SPD = 300
 
@@ -13,6 +17,8 @@ let player = add([
     pos(120, 80),
     sprite("bean")
 ]);
+
+
 
 onKeyDown("left", () => {
     player.move(-SPD, 0);
