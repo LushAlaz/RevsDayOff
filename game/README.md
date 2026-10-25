@@ -104,11 +104,8 @@ Output square sprite sheet with 4 equal columns and 4 equal rows."
 
 Run the existing Express server on port 3001, then run `npm.cmd run dev` here.
 The game uses Socket.IO over WebSocket with `http://localhost:3001` by default.
-For another server, set `NEXT_PUBLIC_NETWORK_SERVER_DOMAIN` in `game/.env.local`
-and restart Vite (or set it before building). Vite loads this file from `game/`
-and exposes that specific variable to the Socket.IO client. An absent or empty
-value uses `http://localhost:3001`. Production deployments must be rebuilt after
-changing the value. Use an HTTPS server URL for an HTTPS game page.
+For another server, set `VITE_NETWORK_SERVER_URL` in `game/.env.local` and restart
+Vite (or set it before building). Use an HTTPS server URL for an HTTPS game page.
 If the server is unavailable, single-player gameplay continues; the client retries.
 
 The server sends current room snapshots as
