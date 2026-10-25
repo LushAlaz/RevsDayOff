@@ -57,7 +57,8 @@ export function triggersCadet(result) {
     return !result.success && result.reason !== "cancelled";
 }
 
-export function createLootController({ spots, inventory, random = Math.random, onFail = () => {} }) {
+export function createLootController({ spots, inventory, random = Math.random, onFail = () => {},
+    onDigStart = () => {}, onDigFinish = () => {} }) {
     // Challenge difficulty and awards always follow the collectible's fixed rarity.
     for (const spot of spots) spot.rarity = spot.item.rarity;
     const state = {
@@ -97,6 +98,7 @@ export function createLootController({ spots, inventory, random = Math.random, o
                 this.elapsed = 0;
                 this.phase = "challenge";
                 this.sniffing = false;
+                onDigStart({ position: { ...nearest.position } });
             }
         },
         finish(success, reason = "miss") {
@@ -110,6 +112,7 @@ export function createLootController({ spots, inventory, random = Math.random, o
             this.elapsed = 0;
             this.releaseRequired = true;
             this.sniffing = false;
+            onDigFinish({ ...this.result, position: { ...this.active.position } });
             if (triggersCadet(this.result)) onFail(this.result);
         },
         stopSpinner() {

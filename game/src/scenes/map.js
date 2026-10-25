@@ -9,6 +9,7 @@ import { MAPS, getMap, cycleMap } from "../maps.js";
 import { drawLandscape } from "../landscapes.js";
 import { addCadet, cadetSpawnPoint, enableBite } from "../objects/cadet.js";
 import { addMultiplayer } from "../multiplayer.js";
+import { addDirtEffect } from "../dirt.js";
 
 scene("mapSelect", () => {
     setCamPos(center());
@@ -106,9 +107,18 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     session.mapId = map.id;
     setBackground(map.id === "kyle-field" ? rgb(80, 0, 0) : rgb(66, 119, 64));
     drawLandscape(map);
+    let multiplayer;
     const loot = createLootController({
         spots: generateLoot({ bounds: map.bounds, obstacles: map.obstacles, entrance: SHOP.entrance }),
         inventory: session.inventory,
+        onDigStart: () => multiplayer.setDigging(true),
+        onDigFinish: ({ success, position }) => {
+            multiplayer.setDigging(false);
+            if (success) {
+                addDirtEffect(position);
+                multiplayer.reportFind(position);
+            }
+        },
         // each failed dig calls a cadet, who freezes while Rev is in a challenge
         // and takes an item from her bag if he reaches her
         onFail: () => {
@@ -146,8 +156,10 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
             sniffing: loot.phase === "exploration" && sniffing(),
         }),
     });
-    player.onUpdate(() => loot.step(dt(), isKeyDown("x"), player.pos));
-    const multiplayer = addMultiplayer(player, map);
+    player.onUpdate(() => loot.step(dt(), sniffing(), player.pos));
+    multiplayer = addMultiplayer(player, map, {
+        getSniffing: () => loot.phase === "exploration" && loot.sniffing && !hud.isBagOpen(),
+    });
     enableBite(player, { canBite: () => loot.phase !== "challenge", onBite: () => multiplayer.bite() });
     onKeyPress("space", () => loot.stopSpinner());
     addLootUI(player, loot, map.name);

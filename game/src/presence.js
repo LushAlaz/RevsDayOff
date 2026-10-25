@@ -7,11 +7,17 @@ export function validPosition(value, bounds) {
 }
 
 /** Adapter for socket-keyed current-room snapshots. Time is seconds. */
-export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp = () => {} }) {
+export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp = () => {}, onFound = () => {} }) {
     const records = new Map();
     let lastSent = null;
     let lastSentAt = -Infinity;
     let disposed = false;
+    let digging = false;
+
+    function sendDigging() {
+        const { x, y } = getLocal();
+        socket.emit("sniffing", { x, y, active: digging });
+    }
 
     function send() {
         const value = getLocal();
@@ -24,6 +30,7 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
         lastSent = null;
         socket.emit("join_room", { room: mapId, ...getLocal() });
         send();
+        if (digging) sendDigging();
     }
     function disconnected() {
         records.clear();
@@ -35,7 +42,8 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
         for (const [id, row] of Object.entries(data.room)) {
             if (id === socket.id
                 || !validPosition(row, bounds) || !DIRECTIONS.has(row.direction)) continue;
-            latest.set(id, { x: row.x, y: row.y, direction: row.direction, active: true });
+            latest.set(id, { x: row.x, y: row.y, direction: row.direction, active: true,
+                digging: row.digging === true, sniffing: row.sniffing === true && row.digging !== true });
         }
         for (const id of records.keys()) if (!latest.has(id)) records.delete(id);
         for (const [id, value] of latest) {
@@ -45,17 +53,31 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
     function chomp(value) {
         if (socket.connected && validPosition(value, bounds)) onChomp({ x: value.x, y: value.y });
     }
-    const handlers = { connect: connected, disconnect: disconnected, update_data: received, chomp };
+    function found(value) {
+        if (socket.connected && typeof value?.id === "string" && value.id !== socket.id
+            && validPosition(value, bounds)) onFound({ id: value.id, x: value.x, y: value.y });
+    }
+    const handlers = { connect: connected, disconnect: disconnected, update_data: received, chomp, "dug-up": found };
     for (const [event, handler] of Object.entries(handlers)) socket.on(event, handler);
 
     return {
         records,
+        setDigging(active) {
+            if (disposed || typeof active !== "boolean" || digging === active) return;
+            digging = active;
+            if (socket.connected) sendDigging();
+        },
+        reportFind(position) {
+            if (!disposed && socket.connected && validPosition(position, bounds)) {
+                socket.emit("dug-up", { x: position.x, y: position.y });
+            }
+        },
         step() {
             if (disposed) return;
             if (!socket.connected) return;
             const value = getLocal();
             const changed = !lastSent || value.x !== lastSent.x || value.y !== lastSent.y
-                || value.direction !== lastSent.direction;
+                || value.direction !== lastSent.direction || value.sniffing !== lastSent.sniffing;
             const elapsed = now() - lastSentAt;
             if ((changed && elapsed >= 0.1 - 1e-9) || elapsed >= 1) send();
         },

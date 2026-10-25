@@ -1,14 +1,17 @@
 import { io } from "socket.io-client";
 import { createPresence } from "./presence.js";
+import { addDirtEffect } from "./dirt.js";
+import { addSniffingEffect } from "./sniffing-ui.js";
 
-export function addMultiplayer(player, map) {
+export function addMultiplayer(player, map, { getSniffing = () => false } = {}) {
     const socket = io(import.meta.env.VITE_NETWORK_SERVER_URL || "http://localhost:3001", {
         transports: ["websocket"], autoConnect: false, forceNew: true,
     });
     const views = new Map();
     const presence = createPresence({
         socket, mapId: map.id, bounds: map.bounds, now: () => performance.now() / 1000,
-        getLocal: () => ({ x: player.pos.x, y: player.pos.y, direction: player.facing }),
+        getLocal: () => ({ x: player.pos.x, y: player.pos.y, direction: player.facing, sniffing: getSniffing() }),
+        onFound: (position) => addDirtEffect(position, { announce: true }),
         onChomp: ({ x, y }) => {
             // The server supplies a location, not a socket ID. Do not guess an owner.
             add([text("CHOMP!", { font: "pixel", size: 8 }), pos(x, y - 44), anchor("center"),
@@ -30,11 +33,20 @@ export function addMultiplayer(player, map) {
             if (!view) {
                 const actor = add([sprite("reveille", { width: 64, height: 64 }),
                     pos(record.x, record.y), anchor("center"), z(2)]);
+                addSniffingEffect(actor, () => {
+                    const current = presence.records.get(id);
+                    return current?.sniffing === true && !current.digging;
+                });
+                const diggingLabel = actor.add([
+                    text("Digging...", { font: "pixel", size: 8 }), pos(0, -44), anchor("center"),
+                    outline(2, rgb(50, 35, 22)), z(4),
+                ]);
                 view = { actor, from: { x: record.x, y: record.y },
-                    target: { x: record.x, y: record.y }, started: time(), movedAt: -Infinity };
+                    target: { x: record.x, y: record.y }, started: time(), movedAt: -Infinity, diggingLabel };
                 views.set(id, view);
             }
             const { actor } = view;
+            view.diggingLabel.hidden = !record.digging;
             if (record.x !== view.target.x || record.y !== view.target.y) {
                 view.from = { x: actor.pos.x, y: actor.pos.y };
                 view.target = { x: record.x, y: record.y };

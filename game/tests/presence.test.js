@@ -8,6 +8,7 @@ function fixture() {
     const handlers = new Map();
     const emitted = [];
     const chomps = [];
+    const finds = [];
     const socket = {
         id: "self", connected: false,
         on(event, callback) { handlers.set(event, callback); },
@@ -17,14 +18,74 @@ function fixture() {
     };
     const presence = createPresence({ socket, mapId: "kyle-field",
         bounds: { left: 0, top: 0, right: 1440, bottom: 640 },
-        getLocal: () => local, now: () => clock, onChomp: (data) => chomps.push(data) });
-    return { presence, socket, emitted, handlers, chomps,
+        getLocal: () => local, now: () => clock, onChomp: (data) => chomps.push(data),
+        onFound: (data) => finds.push(data) });
+    return { presence, socket, emitted, handlers, chomps, finds,
         at(value) { clock = value; }, local(value) { local = value; },
         connect() { socket.connected = true; handlers.get("connect")(); },
         receive(room) { handlers.get("update_data")({ room }); },
     };
 }
 const row = (id = "other", x = 300, direction = "left") => ({ id, x, y: 300, direction });
+
+test("sniffing toggles send without movement and snapshot digging takes priority", () => {
+    const f = fixture(); f.connect();
+    f.local({ x: 100, y: 100, direction: "down", sniffing: true });
+    f.at(0.1); f.presence.step();
+    assert.equal(f.emitted.at(-1).data.sniffing, true);
+    f.local({ x: 100, y: 100, direction: "down", sniffing: false });
+    f.at(0.2); f.presence.step();
+    assert.equal(f.emitted.at(-1).data.sniffing, false);
+    f.receive({ other: { ...row(), sniffing: true } });
+    assert.equal(f.presence.records.get("other").sniffing, true);
+    f.receive({ other: { ...row(), sniffing: true, digging: true } });
+    assert.equal(f.presence.records.get("other").sniffing, false);
+    f.receive({ other: row() });
+    assert.equal(f.presence.records.get("other").sniffing, false);
+    f.local({ x: 100, y: 100, direction: "down", sniffing: true });
+    f.socket.connected = false; f.handlers.get("disconnect")();
+    f.connect();
+    assert.equal(f.emitted.at(-2).data.sniffing, true, "reconnect restores current sniffing on join");
+});
+
+test("digging transitions broadcast once, reconnect restores current status, and offline finds are not replayed", () => {
+    const f = fixture(); f.connect();
+    f.presence.setDigging(true); f.presence.setDigging(true);
+    assert.deepEqual(f.emitted.at(-1), { event: "sniffing", data: { x: 100, y: 100, active: true } });
+    assert.equal(f.emitted.filter((event) => event.event === "sniffing").length, 1);
+    f.socket.connected = false; f.handlers.get("disconnect")();
+    f.presence.reportFind({ x: 400, y: 300 });
+    f.connect();
+    assert.deepEqual(f.emitted.slice(-3).map((event) => event.event), ["join_room", "update_position", "sniffing"]);
+    assert.equal(f.emitted.at(-1).data.active, true);
+    f.presence.setDigging(false);
+    assert.equal(f.emitted.at(-1).data.active, false);
+    f.socket.connected = false; f.handlers.get("disconnect")();
+    f.presence.setDigging(true); f.presence.setDigging(false);
+    f.connect();
+    assert.deepEqual(f.emitted.slice(-2).map((event) => event.event), ["join_room", "update_position"]);
+    assert.equal(f.emitted.some((event) => event.event === "dug-up"), false);
+    f.presence.reportFind({ x: 400, y: 300 });
+    assert.deepEqual(f.emitted.at(-1), { event: "dug-up", data: { x: 400, y: 300 } });
+    f.presence.dispose();
+    const count = f.emitted.length;
+    f.presence.setDigging(true); f.presence.reportFind({ x: 400, y: 300 });
+    assert.equal(f.emitted.length, count);
+});
+
+test("digging snapshots default false; found messages validate position and sender and suppress local echoes", () => {
+    const f = fixture(); f.connect();
+    f.receive({ other: { ...row(), digging: true } });
+    assert.equal(f.presence.records.get("other").digging, true);
+    f.receive({ other: row() });
+    assert.equal(f.presence.records.get("other").digging, false);
+    const receive = f.handlers.get("dug-up");
+    for (const value of [null, {}, { id: "other", x: NaN, y: 300 },
+        { id: "self", x: 300, y: 300 }, { id: "other", x: -1, y: 300 }]) receive(value);
+    assert.equal(f.finds.length, 0);
+    receive({ id: "other", x: 400, y: 300 });
+    assert.deepEqual(f.finds, [{ id: "other", x: 400, y: 300 }]);
+});
 
 test("joins before updating, throttles movement, heartbeats while idle, and skips offline sends", () => {
     const f = fixture();

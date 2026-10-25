@@ -20,6 +20,31 @@ function fixture(rarity = "Common") {
     return { spot, inventory, controller };
 }
 
+test("dig callbacks run once per attempt, only start at a spot, and finish with that spot's coordinates", () => {
+    for (const outcome of ["success", "miss", "timeout", "cancelled"]) {
+        const spot = { id: 0, position: { x: 400, y: 300 }, item: ITEMS[0] };
+        const starts = [], finishes = [], failures = [], inventory = [];
+        const controller = createLootController({ spots: [spot], inventory, random: () => 0.5,
+            onDigStart: (event) => starts.push(event), onDigFinish: (event) => finishes.push(event),
+            onFail: (event) => failures.push(event) });
+        controller.step(0, true, { x: 700, y: 300 });
+        assert.equal(starts.length, 0, "sniffing is not digging");
+        controller.step(0, true, { x: 420, y: 300 });
+        controller.step(0, true, spot.position);
+        assert.deepEqual(starts, [{ position: { x: 400, y: 300 } }]);
+        if (outcome === "timeout") controller.step(6, true, spot.position);
+        else if (outcome === "cancelled") controller.cancel();
+        else controller.finish(outcome === "success");
+        controller.finish(true); controller.stopSpinner(); controller.cancel();
+        assert.equal(finishes.length, 1);
+        assert.equal(finishes[0].success, outcome === "success");
+        assert.deepEqual(finishes[0].position, spot.position);
+        assert.notEqual(finishes[0].position, spot.position, "event coordinates are copied");
+        assert.equal(inventory.length, outcome === "success" ? 1 : 0);
+        assert.equal(failures.length, outcome === "miss" || outcome === "timeout" ? 1 : 0);
+    }
+});
+
 test("random loot is reachable, spaced apart, and excluded from shop and entrance", () => {
     for (let seed = 1; seed <= 50; seed++) {
         const spots = generateLoot({ bounds: FIELD_LAYOUT.bounds, obstacle: SHOP.obstacle,
