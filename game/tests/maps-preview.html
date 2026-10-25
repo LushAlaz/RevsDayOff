@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><base href="/"><title>Map travel visual test</title></head>
+<body style="margin:0;overflow:hidden">
+<nav style="position:fixed;left:12px;bottom:8px;z-index:1000">
+  <button id="kyle-field">Kyle Field doorway</button>
+  <button id="aggie-park">Aggie Park doorway</button>
+  <button id="drill-field">Drill Field doorway</button>
+  <button id="selector">Open selector</button>
+</nav>
+<script type="module">
+import "../src/setup.js";
+import "../src/scenes/map.js";
+import "../src/scenes/shop.js";
+import { titleScene } from "../src/scenes/title.js";
+import { leaderboardScene } from "../src/scenes/leaderboard.js";
+import { loadSprites } from "../src/sprites.js";
+import { loadCadetSprites } from "../src/objects/cadet.js";
+import { loadHudSprites } from "../src/objects/hud.js";
+import { loadBevoSprites } from "../src/bevo.js";
+import { MAPS, getShopReturn } from "../src/maps.js";
+import { session, startNewGame } from "../src/session.js";
+loadRoot("/");
+loadSprites();
+loadCadetSprites();
+loadHudSprites();
+loadBevoSprites();
+titleScene();
+leaderboardScene();
+startNewGame();
+session.coins = 50;
+session.inventory.push({ id: "ring", name: "Aggie Ring", rarity: "Legendary" });
+for (const map of MAPS) {
+    document.getElementById(map.id).onclick = () => go("explore", getShopReturn(map.id));
+}
+document.getElementById("selector").onclick = () => go("mapSelect");
+go("mapSelect");
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><base href="/"><title>Digging multiplayer preview</title></head>
+<body style="margin:0;overflow:hidden">
+<nav style="position:fixed;left:12px;bottom:8px;z-index:1000;background:white;padding:6px">
+  <button id="start">Start digging</button><button id="find">Find item</button>
+  <button id="sniff">Toggle sniffing</button>
+  <button id="miss">Miss</button><button id="cancel">Cancel</button>
+  <button id="leave">Leave map</button><button id="reset">Reset map</button>
+  <output id="status"></output>
+</nav>
+<script type="module">
+import "../src/setup.js";
+import { loadSprites } from "../src/sprites.js";
+import { addPlayer } from "../src/objects/player.js";
+import { createLootController } from "../src/loot.js";
+import { addLootUI } from "../src/loot-ui.js";
+import { addMultiplayer } from "../src/multiplayer.js";
+import { addDirtEffect } from "../src/dirt.js";
+import { getMap } from "../src/maps.js";
+import { ITEMS } from "../src/items.js";
+loadRoot("/");
+loadSprites();
+const observer = new URLSearchParams(location.search).has("observer");
+let loot;
+scene("dig-preview", () => {
+    setCamPos(center());
+    setBackground(rgb(62, 118, 64));
+    // Ground grid helps verify that the dirt stays at the dig spot.
+    for (let x = 0; x < 960; x += 80) add([rect(1, 540), pos(x, 0), color(73, 130, 73), z(-90)]);
+    let multiplayer;
+    let previewSniffing = false;
+    const inventory = [];
+    loot = createLootController({ inventory, random: () => 0.5,
+        spots: [{ id: 0, position: { x: 440, y: 300 }, item: ITEMS.find((item) => item.rarity === "Common") }],
+        onDigStart: () => multiplayer.setDigging(true),
+        onDigFinish: ({ success, position }) => {
+            multiplayer.setDigging(false);
+            if (success) { addDirtEffect(position); multiplayer.reportFind(position); }
+        },
+    });
+    const player = addPlayer({ spawn: { x: observer ? 600 : 440, y: 300 }, inventory,
+        getMovementState: () => ({ locked: loot.phase === "challenge", sniffing: isKeyDown("x") }) });
+    player.onUpdate(() => loot.step(dt(), previewSniffing || isKeyDown("x"), player.pos));
+    multiplayer = addMultiplayer(player, getMap("kyle-field"), {
+        getSniffing: () => loot.phase === "exploration" && loot.sniffing,
+    });
+    addLootUI(player, loot, observer ? "Observer" : "Digger");
+    onKeyPress("space", () => loot.stopSpinner());
+    onKeyPress("escape", () => loot.cancel());
+    onUpdate(() => {
+        const digging = [...multiplayer.records.values()].filter((record) => record.digging).length;
+        const sniffing = [...multiplayer.records.values()].filter((record) => record.sniffing).length;
+        document.querySelector("#status").textContent = `${loot.phase} | peers digging: ${digging} | sniffing: ${sniffing}`;
+    });
+    document.querySelector("#start").onclick = () => loot.step(0, true, player.pos);
+    document.querySelector("#find").onclick = () => { loot.angle = loot.target; loot.stopSpinner(); };
+    document.querySelector("#miss").onclick = () => loot.finish(false);
+    document.querySelector("#cancel").onclick = () => loot.cancel();
+    document.querySelector("#sniff").onclick = () => {
+        previewSniffing = !previewSniffing;
+        // Keep this fixture's sniffer away from its known buried spot.
+        player.pos.x = observer ? 600 : (previewSniffing ? 320 : 440);
+    };
+});
+scene("left-preview", () => {
+    setCamPos(center());
+    setBackground(rgb(31, 36, 36));
+    add([text("Left map — effects cleared", { font: "pixel", size: 16 }), pos(center()), anchor("center")]);
+    document.querySelector("#status").textContent = "left map";
+    for (const id of ["start", "find", "miss", "cancel", "sniff"]) document.getElementById(id).onclick = null;
+});
+document.querySelector("#leave").onclick = () => go("left-preview");
+document.querySelector("#reset").onclick = () => go("dig-preview");
+go("dig-preview");
+</script>
+</body>
+</html>
