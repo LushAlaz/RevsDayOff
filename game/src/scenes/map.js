@@ -3,9 +3,10 @@ import { followPlayer } from "../camera.js";
 import { SHOP, addFieldShop } from "../shop.js";
 import { generateLoot, createLootController } from "../loot.js";
 import { addLootUI } from "../loot-ui.js";
-import { session } from "../session.js";
+import { session, stealItem } from "../session.js";
 import { MAPS, getMap, cycleMap } from "../maps.js";
 import { drawLandscape } from "../landscapes.js";
+import { addCadet, cadetSpawnPoint, enableBite } from "../objects/cadet.js";
 
 scene("mapSelect", () => {
     setCamPos(center());
@@ -18,8 +19,8 @@ scene("mapSelect", () => {
     function patch(x, y, w, h, tint, radius = 0) {
         return add([rect(w, h, { radius }), pos(x, y), color(...tint)]);
     }
-    function label(value, x, y, size = 18) {
-        return add([text(value, { size }), pos(x, y), anchor("center"), color(cream)]);
+    function label(value, x, y, size = 8, textWidth) {
+        return add([text(value, { font: "pixel", size, width: textWidth, align: "center", lineSpacing: 8 }), pos(x, y), anchor("center"), color(cream)]);
     }
     function travel() {
         if (traveling) return;
@@ -28,15 +29,12 @@ scene("mapSelect", () => {
         setCursor("default");
         go("explore", { mapId: selected.id });
     }
-    label("EXPLORE AGGIELAND", 480, 38, 32);
-    label("Choose your next sniffing spot", 480, 76, 18);
+    label("EXPLORE AGGIELAND", 480, 38, 24);
     patch(32, 106, 600, 374, [122, 151, 101], 8);
-    // A simplified campus guide, with Drill Field north of Kyle and Aggie Park east.
     patch(48, 258, 568, 30, [139, 142, 133]);
     patch(48, 267, 568, 12, [202, 196, 172]);
     patch(408, 118, 28, 346, [139, 142, 133]);
     patch(417, 118, 10, 346, [202, 196, 172]);
-    label("CAMPUS WALK", 170, 274, 12);
     for (const [x, y, w, h] of [[65, 133, 65, 48], [146, 127, 52, 66], [72, 204, 105, 33], [462, 134, 62, 56], [541, 145, 54, 78]]) {
         patch(x + 3, y + 4, w, h, [99, 109, 87]);
         patch(x, y, w, h, [197, 177, 143]);
@@ -62,8 +60,8 @@ scene("mapSelect", () => {
     }
     const pins = MAPS.map((map) => {
         const pin = add([circle(17), pos(map.pin.x, map.pin.y), anchor("center"), area(), color(maroon), outline(3, cream), z(2)]);
-        pin.add([text(String(MAPS.indexOf(map) + 1), { size: 18 }), anchor("center"), color(cream)]);
-        const caption = label(map.name, map.pin.x, map.id === "drill-field" ? 239 : 438, 18);
+        pin.add([text(String(MAPS.indexOf(map) + 1), { font: "pixel", size: 8 }), anchor("center"), color(cream)]);
+        const caption = label(map.name, map.pin.x, map.id === "drill-field" ? 239 : 438, 8);
         caption.use(area());
         for (const target of [pin, caption]) {
             target.onHover(() => { selected = map; setCursor("pointer"); });
@@ -73,21 +71,20 @@ scene("mapSelect", () => {
         return { map, pin };
     });
     patch(652, 106, 276, 374, [44, 48, 51], 8);
-    const name = label("", 790, 146, 27);
-    const size = label("", 790, 187, 17);
-    const description = add([text("", { size: 19, width: 230, align: "center" }), pos(790, 251), anchor("center"), color(cream)]);
-    label("12 hidden loot spots", 790, 324, 17);
-    label("Same shop, bag & coins", 790, 352, 16);
-    const enter = add([rect(224, 48, { radius: 6 }), pos(678, 402), area(), color(maroon)]);
-    enter.add([text("Explore / Enter", { size: 21 }), pos(112, 24), anchor("center"), color(cream)]);
+    const name = label("", 790, 146, 16, 240);
+    const size = label("", 790, 199, 8);
+    const description = add([text("", { font: "pixel", size: 8, width: 224, align: "center", lineSpacing: 8 }), pos(790, 251), anchor("center"), color(cream), z(999)]);
+    label("12 hidden loot spots", 790, 324, 8);
+    const enter = add([rect(224, 48, { radius: 6 }), pos(678, 402), area(), color(maroon), z(999)]);
+    enter.add([text("Explore / Enter", { font: "pixel", size: 8 }), pos(112, 24), anchor("center"), color(cream), z(999)]);
     enter.onClick(travel);
     enter.onHover(() => setCursor("pointer"));
     enter.onHoverEnd(() => setCursor("default"));
-    const back = add([text("Back to Title / Esc", { size: 17 }), pos(800, 510), anchor("center"), area(), color(cream)]);
+    const back = add([text("Back to Title / Esc", { font: "pixel", size: 8 }), pos(800, 510), anchor("center"), area(), color(cream), z(999)]);
     back.onClick(() => { setCursor("default"); go("title"); });
     back.onHover(() => setCursor("pointer"));
     back.onHoverEnd(() => setCursor("default"));
-    label("Click a pin, or use arrow keys + Enter", 295, 510, 17);
+    label("Click a pin, or use arrow keys + Enter", 295, 510, 8);
     onUpdate(() => {
         name.text = selected.name;
         size.text = `${selected.size}  |  ${selected.bounds.right} x ${selected.bounds.bottom}`;
@@ -110,6 +107,15 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     const loot = createLootController({
         spots: generateLoot({ bounds: map.bounds, obstacles: map.obstacles, entrance: SHOP.entrance }),
         inventory: session.inventory,
+        // each failed dig calls a cadet, who freezes while Rev is in a challenge
+        // and takes an item from her bag if he reaches her
+        onFail: () => {
+            const spawn = cadetSpawnPoint(player.pos, map.bounds);
+            addCadet(vec2(spawn.x, spawn.y), player, {
+                canMove: () => loot.phase !== "challenge",
+                steal: () => stealItem(),
+            });
+        },
     });
     const player = addPlayer({
         spawn: spawn ?? map.spawn,
@@ -119,6 +125,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         getMovementState: () => ({ locked: loot.phase === "challenge", sniffing: loot.phase === "exploration" && isKeyDown("x") }),
     });
     player.onUpdate(() => loot.step(dt(), isKeyDown("x"), player.pos));
+    enableBite(player, { canBite: () => loot.phase !== "challenge" });
     onKeyPress("space", () => loot.stopSpinner());
     addLootUI(player, loot, session.inventory, map.name);
     addFieldShop(player, () => loot.canInteract && !isKeyDown("x"), map.id);

@@ -15,5 +15,6 @@ export function loadSprites() {
             right: { from: 9, to: 10, speed: 8, loop: true },
         },
     });
-    loadFont("ithaca", "fonts/Ithaca-LVB75.ttf")
+    // save the best for last
+    loadSprite("marcel", "sprites/marcel_transparent.png")
 }

@@ -11,7 +11,8 @@ export function addPlayer({
         pos(spawn.x, spawn.y),
         sprite("reveille", { width: 64, height: 64, frame: 0 }),
         anchor("center"),
-        { items: inventory },
+        z(2),
+        { items: inventory }
     ]);
     // Neither native right-facing frame is standing; mirror the left idle only.
     const idleFrames = { down: 0, up: 3, right: 6, left: 6 };
