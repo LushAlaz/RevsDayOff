@@ -1,4 +1,5 @@
 import { session } from "../session.js";
+import { setSceneMusic } from "../music.js";
 
 // each string is one line
 const STORY = [
@@ -52,6 +53,7 @@ export function introScene() {
     loadSound("text-advance", "sounds/advance.wav");
 
     scene("intro", () => {
+        setSceneMusic("intro");
         setBackground(rgb(0, 0, 0));
 
         // same 320x240 screen as the title, scaled to fit the window

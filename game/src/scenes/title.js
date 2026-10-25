@@ -11,6 +11,7 @@
 
 import { session, startNewGame } from "../session.js";
 import { hasProfile } from "../profile.js";
+import { setSceneMusic } from "../music.js";
 
 export function titleScene() {
     loadSprite("title-bg", "sprites/title-bg.png");
@@ -29,6 +30,7 @@ export function titleScene() {
     loadSprite("title-logo", "sprites/title-logo.png");
 
     scene("title", () => {
+        setSceneMusic("title");
         // the field scene moves the camera to follow Rev; put it back so the
         // title isn't drawn off-center after pressing Esc from the field
         setCamPos(center());

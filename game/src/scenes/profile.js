@@ -9,10 +9,12 @@ import {
     profile, saveProfile, acceptsChar, finishDisplayName, profileError, usernameError, USERNAME_MAX, DISPLAY_NAME_MAX,
 } from "../profile.js";
 import { session } from "../session.js";
+import { setSceneMusic } from "../music.js";
 
 export function profileScene() {
     // next: where to go after saving; back: where Esc goes
     scene("profile", ({ next = session.introPlayed ? "mapSelect" : "intro", back = "title" } = {}) => {
+        setSceneMusic("profile");
         setCamPos(center());
         setCursor("default");
         setBackground(rgb(31, 36, 36));

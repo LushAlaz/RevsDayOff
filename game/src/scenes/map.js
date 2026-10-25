@@ -17,8 +17,10 @@ import { addMultiplayer } from "../multiplayer.js";
 import { addDirtEffect } from "../dirt.js";
 import { addBevoView } from "../bevo.js";
 import { isBevoActive } from "../bevo-state.js";
+import { setSceneMusic, bevoRoars } from "../music.js";
 
 scene("mapSelect", () => {
+    setSceneMusic("mapSelect");
     setCamPos(center());
     setCursor("default");
     setBackground(rgb(31, 36, 36));
@@ -161,11 +163,13 @@ scene("mapSelect", () => {
 
 scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     const map = getMap(mapId);
+    setSceneMusic("explore", map.id);
     session.mapId = map.id;
     setBackground(map.id === "kyle-field" ? rgb(80, 0, 0) : rgb(66, 119, 64));
     drawLandscape(map);
     let multiplayer;
     const bossActive = () => multiplayer?.boss.active === true;
+    let bevoPhase = null; // last Bevo phase seen, so each appearance or charge roars once
     const stunned = () => multiplayer?.boss.stunned === true;
     const cadets = new Map();
     let nextCadetId = 0;
@@ -176,6 +180,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         onDigFinish: ({ success, position }) => {
             multiplayer.setDigging(false);
             if (success) {
+                play("item-get", { volume: 0.7 });
                 addDirtEffect(position);
                 multiplayer.reportFind(position);
             }
@@ -225,6 +230,10 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     multiplayer = addMultiplayer(player, map, {
         onBevoState: (state) => {
             if (isBevoActive(state)) { loot.suspend(); hud.closeBag(); }
+            // the fight theme takes over while Bevo is up, and he roars as he appears and as he charges
+            setSceneMusic("explore", map.id, { bossActive: isBevoActive(state) });
+            if (bevoRoars(bevoPhase, state?.phase)) play("bevo-roar", { volume: 0.8 });
+            bevoPhase = state?.phase;
         },
         onBevoHit: () => {
             add([text("STUNNED!", { font: "pixel", size: 8 }), pos(player.pos.x, player.pos.y - 48),
@@ -246,7 +255,10 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     enableBite(player, {
         onInteract: () => multiplayer.boss.summon(player.pos),
         canBite: () => loot.phase !== "challenge" && !hud.isBagOpen() && !stunned(),
-        onBite: () => multiplayer.bite(),
+        onBite: () => {
+            play("chomp", { volume: 0.7 });
+            multiplayer.bite();
+        },
     });
     onKeyPress("space", () => loot.stopSpinner());
     addLootUI(player, loot);
