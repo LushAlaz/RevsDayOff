@@ -3,6 +3,8 @@ import { createPresence } from "./presence.js";
 import { addDirtEffect } from "./dirt.js";
 import { addSniffingEffect } from "./sniffing-ui.js";
 import { createKnockbackPlayback } from "./knockback.js";
+import { addNameTag } from "./objects/nametag.js";
+import { profile, hasProfile } from "./profile.js";
 
 export function addMultiplayer(player, map, { getSniffing = () => false, getCadets = () => [],
     onBevoState = () => {}, onBevoHit = () => {} } = {}) {
@@ -14,6 +16,7 @@ export function addMultiplayer(player, map, { getSniffing = () => false, getCade
     const localKnockback = createKnockbackPlayback(() => performance.now() / 1000);
     const presence = createPresence({
         socket, mapId: map.id, bounds: map.bounds, now: () => performance.now() / 1000,
+        getProfile: () => (hasProfile() ? { username: profile.username, displayName: profile.displayName } : {}),
         getLocal: () => ({ x: player.pos.x, y: player.pos.y, direction: player.facing, sniffing: getSniffing(), cadets: getCadets() }),
         onBevoState,
         onForcedMovement: (motion, serverNow) => {
@@ -91,13 +94,16 @@ export function addMultiplayer(player, map, { getSniffing = () => false, getCade
                     text("Digging...", { font: "pixel", size: 8 }), pos(0, -44), anchor("center"),
                     outline(2, rgb(50, 35, 22)), z(4),
                 ]);
-                view = { actor, from: { x: record.x, y: record.y },
+                const nameTag = addNameTag(actor, record.displayName ?? "");
+                view = { actor, from: { x: record.x, y: record.y }, nameTag,
                     target: { x: record.x, y: record.y }, started: time(), movedAt: -Infinity, diggingLabel,
                     knockback: createKnockbackPlayback(() => performance.now() / 1000) };
                 views.set(id, view);
             }
             const { actor } = view;
             view.diggingLabel.hidden = !record.digging;
+            // players without a name (older clients) just show no tag
+            if (view.nameTag.text !== (record.displayName ?? "")) view.nameTag.text = record.displayName ?? "";
             if (view.knockback.motion?.encounterId !== presence.boss.state?.encounterId) view.knockback.clear();
             if (record.knockback) view.knockback.accept(record.knockback, record.serverNow, actor.pos);
             const forced = view.knockback.sample();

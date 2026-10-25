@@ -8,7 +8,10 @@ import { loadSprites } from "./sprites.js";
 import { loadCadetSprites } from "./objects/cadet.js";
 import { loadHudSprites } from "./objects/hud.js";
 import { loadBevoSprites } from "./bevo.js";
+import { profileScene } from "./scenes/profile.js";
+import { loadProfile } from "./profile.js";
 
+loadProfile();
 loadSprites();
 loadCadetSprites();
 loadHudSprites();
@@ -16,5 +19,6 @@ loadBevoSprites();
 titleScene();
 leaderboardScene();
 introScene();
+profileScene();
 
 go("title");

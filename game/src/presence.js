@@ -1,6 +1,7 @@
 import { validCadets } from "./cadet-state.js";
 import { createBevoClient } from "./bevo-state.js";
 import { validKnockback } from "./knockback.js";
+import { validUsername, validDisplayName } from "./profile.js";
 const DIRECTIONS = new Set(["up", "down", "left", "right"]);
 
 export function validPosition(value, bounds) {
@@ -10,7 +11,8 @@ export function validPosition(value, bounds) {
 }
 
 /** Adapter for socket-keyed current-room snapshots. Time is seconds. */
-export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp = () => {}, onFound = () => {},
+// getProfile: { username, displayName } sent once when joining a room, so others can show the name.
+export function createPresence({ socket, mapId, bounds, getLocal, now, getProfile = () => ({}), onChomp = () => {}, onFound = () => {},
     onBevoState = () => {}, onBevoHit = () => {}, onForcedMovement = () => {} }) {
     const records = new Map();
     let lastSent = null;
@@ -37,7 +39,7 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
     function connected() {
         records.clear();
         lastSent = null;
-        socket.emit("join_room", { room: mapId, ...getLocal() });
+        socket.emit("join_room", { room: mapId, ...getLocal(), ...getProfile() });
         send();
         if (digging) sendDigging();
     }
@@ -65,7 +67,9 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
             latest.set(id, { x: row.x, y: row.y, direction: row.direction, active: true,
                 knockback, serverNow: data.serverNow,
                 cadets: validCadets(row.cadets, bounds) ? row.cadets : [],
-                digging: row.digging === true, sniffing: row.sniffing === true && row.digging !== true });
+                digging: row.digging === true, sniffing: row.sniffing === true && row.digging !== true,
+                username: validUsername(row.username) ? row.username : null,
+                displayName: validDisplayName(row.displayName) ? row.displayName : null });
         }
         for (const id of records.keys()) if (!latest.has(id)) records.delete(id);
         for (const [id, value] of latest) {

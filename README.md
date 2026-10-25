@@ -6,7 +6,7 @@ Built with JavaScript, [KAPLAY](https://kaplayjs.com/), and Vite.
 
 ## How to play
 
-1. Select **Play** and read the intro, or press **Esc** to skip it.
+1. Select **Play**. The first time, pick a **username** (3–16 letters, numbers or _) and a **display name** (up to 20 characters, shown under your dog to other players); they are saved in your browser. Then read the intro, or press **Esc** to skip it.
 2. Choose **Kyle Field**, **Aggie Park**, or **Simpson Drill Field** on the campus map.
 3. Explore as Reveille. Hold **X** to sniff for buried items and follow the scent hints. Sniffing slows your movement.
 4. When you find a spot, a timing challenge begins. Press **Space** when the pointer reaches the green target to collect the item. Rarer treasures are harder to collect and worth more coins.
@@ -39,6 +39,7 @@ Open the local URL printed in the terminal (normally `http://localhost:3000`). S
 | Talk to the ducks at the Aggie Park pond | Space on the bank near them |
 | Read the barrel in the Good Bull shop | Space next to it |
 | Select a map | Click, or arrow keys and Enter |
+| Change your username or display name | N on the map screen |
 | Sell one selected item | Enter in the selling menu |
 | Sell everything in your bag | A in the selling menu |
 | Return / close a menu / cancel a challenge | Esc |

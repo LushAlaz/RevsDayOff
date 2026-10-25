@@ -5,6 +5,8 @@ import { createSellingController } from "../selling.js";
 import { addSellingUI } from "../selling-ui.js";
 import { getMap, getShopReturn } from "../maps.js";
 import { addBubble, addPrompt } from "../objects/bubble.js";
+import { addNameTag } from "../objects/nametag.js";
+import { profile, hasProfile } from "../profile.js";
 
 export const BARREL_LABEL = "Marcel Reed's Interception Juice";
 const BARREL_READ_RANGE = 90;
@@ -75,6 +77,7 @@ scene("shop", ({ mapId = session.mapId } = {}) => {
         getMovementState: () => ({ locked: selling.open, sniffing: false }),
     });
     addSellingUI(player, selling);
+    if (hasProfile()) addNameTag(player, profile.displayName, { mine: true });
     const barrelTop = vec2((barrel.left + barrel.right) / 2, barrel.top + 12);
     const canRead = () => !selling.open && player.pos.dist(barrelTop) <= BARREL_READ_RANGE;
     const readPrompt = addPrompt("Space: Read the barrel");

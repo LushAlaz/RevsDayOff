@@ -6,6 +6,8 @@ import { addLootUI } from "../loot-ui.js";
 import { session, stealItem, getBagItems } from "../session.js";
 import { addHud } from "../objects/hud.js";
 import { addDucks } from "../objects/ducks.js";
+import { addNameTag } from "../objects/nametag.js";
+import { profile, hasProfile } from "../profile.js";
 import { MAPS, getMap, cycleMap } from "../maps.js";
 import { drawLandscape } from "../landscapes.js";
 import { addCadet, cadetSpawnPoint, enableBite } from "../objects/cadet.js";
@@ -54,6 +56,7 @@ scene("mapSelect", () => {
     }
     patch(28, 102, 608, 382, [14, 25, 27], 8);
     label("EXPLORE AGGIELAND", 480, 38, 24);
+    label(hasProfile() ? `Playing as ${profile.displayName} (${profile.username})  |  N: change name` : "N: pick a name", 480, 80, 8);
     patch(32, 106, 600, 374, [122, 151, 101], 8);
     for (let y = 120; y < 464; y += 24) {
         for (let x = 44; x < 612; x += 24) {
@@ -151,6 +154,7 @@ scene("mapSelect", () => {
     onKeyPress("down", () => { selected = cycleMap(selected.id, 1); });
     onKeyPress("enter", travel);
     onKeyPress("escape", () => go("title"));
+    onKeyPress("n", () => { setCursor("default"); go("profile", { next: "mapSelect", back: "mapSelect" }); });
 });
 
 scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
@@ -213,6 +217,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         }),
     });
     player.onUpdate(() => loot.step(dt(), sniffing(), player.pos));
+    if (hasProfile()) addNameTag(player, profile.displayName, { mine: true });
     multiplayer = addMultiplayer(player, map, {
         onBevoState: (state) => {
             if (isBevoActive(state)) { loot.suspend(); hud.closeBag(); }

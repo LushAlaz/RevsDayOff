@@ -10,6 +10,7 @@
 // ---------------------------------------------------------------
 
 import { startNewGame } from "../session.js";
+import { hasProfile } from "../profile.js";
 
 export function titleScene() {
     loadSprite("title-bg", "sprites/title-bg.png");
@@ -36,7 +37,8 @@ export function titleScene() {
         function startGame() {
             setCursor("default");
             startNewGame(); // empty the bag from the last run
-            go("intro");    // the intro story goes on to mapSelect when it ends
+            // first time: pick a name, then the intro. The intro goes on to mapSelect when it ends.
+            go(hasProfile() ? "intro" : "profile");
         }
 
         // a 320x240 "screen" that everything below is added to.

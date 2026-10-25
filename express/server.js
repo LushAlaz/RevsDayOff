@@ -31,6 +31,10 @@ const validCoordinates = (data) => data && Number.isFinite(data.x) && Number.isF
 const validPosition = (data) => validCoordinates(data) && directions.has(data.direction)
     && (data.sniffing === undefined || typeof data.sniffing === "boolean");
 const mapSizes = { "kyle-field": [1440, 640], "aggie-park": [1920, 960], "drill-field": [1080, 480] };
+// Same rules as game/src/profile.js. Names are shown to everyone in the room, so reject anything else.
+const validUsername = (value) => typeof value === "string" && /^[A-Za-z0-9_]{3,16}$/.test(value);
+const validDisplayName = (value) => typeof value === "string" && /^[A-Za-z0-9 _.'!?&-]{1,20}$/.test(value)
+    && value === value.trim() && !value.includes("  ");
 function validCadets(value, room) {
   if (value === undefined) return true;
   if (!Array.isArray(value) || value.length > 128) return false;
@@ -96,6 +100,14 @@ io.on('connection', (socket) => {
     }
     player.direction = data.direction;
     player.sniffing = data.sniffing === true && !player.digging;
+    // optional: players who haven't picked a name simply have none
+    if (validUsername(data.username) && validDisplayName(data.displayName)) {
+      player.username = data.username;
+      player.displayName = data.displayName;
+    } else {
+      delete player.username;
+      delete player.displayName;
+    }
     socket.data.roomId = room;
     socket.join(room);
     if (room === "drill-field") socket.emit("bevo_state", bevoController.snapshot());
