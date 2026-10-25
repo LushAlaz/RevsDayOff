@@ -5,10 +5,10 @@ import { session } from "./session.js";
 import { RARITIES } from "./items.js";
 
 export const UPGRADES = [
-    { id: "redbull", name: "Red Bull", price: 60, blurb: "An energy can: Rev runs 25% faster." },
-    { id: "clover", name: "Four-Leaf Clover", price: 150, blurb: "Better luck: rarer loot shows up more often." },
-    { id: "toothbrush", name: "Toothbrush", price: 80, blurb: "Sharper chomps: double damage on Bevo." },
-    { id: "crown", name: "Royal Crown", price: 1000, blurb: "Worn on Rev's head for every player to see." },
+    { id: "redbull", name: "Red Bull", price: 60, blurb: "Hackathon Juice (Rev runs 25% faster)" },
+    { id: "clover", name: "Four-Leaf Clover", price: 150, blurb: "Get lucky! (Rarer drops appear more often)" },
+    { id: "toothbrush", name: "Toothbrush", price: 80, blurb: "Sharper chomps! (Double damage)" },
+    { id: "crown", name: "Royal Crown", price: 1000, blurb: "For true royalty only... (Nothing, flex on other people)" },
 ];
 
 export const BASE_SPEED = 300;
@@ -60,7 +60,7 @@ export function createUpgradeShop(state = session) {
         },
         openMenu() {
             this.open = true;
-            this.message = "Pick an upgrade. Once bought, it's yours to keep.";
+            this.message = "Not enough coins? Dig for loot and sell it to Marcel!";
         },
         close() { this.open = false; },
         select(id) { if (this.open && UPGRADES.some((upgrade) => upgrade.id === id)) this.selectedId = id; },
