@@ -71,11 +71,12 @@ export function addCadet(position, target, { speed = 120, size = 3, canMove = ()
         opacity(1),
         z(3),
         "cadet",
-        { gone: false },
+        { gone: false, facing: "down", moving: false },
     ]);
 
     cadet.onUpdate(() => {
-        if (cadet.gone || !canMove() || !target || !target.exists()) return;
+        cadet.moving = false;
+        if (cadet.gone || !canMove() || !target || !target.exists()) { cadet.stop(); return; }
         const toTarget = target.pos.sub(cadet.pos);
         if (toTarget.len() <= CATCH_RANGE) {
             const item = steal();
@@ -83,12 +84,14 @@ export function addCadet(position, target, { speed = 120, size = 3, canMove = ()
             return;
         }
 
+        cadet.moving = true;
         cadet.move(toTarget.unit().scale(speed));
 
         // face whichever way he's mostly moving
         const facing = Math.abs(toTarget.x) > Math.abs(toTarget.y)
             ? (toTarget.x < 0 ? "left" : "right")
             : (toTarget.y < 0 ? "up" : "down");
+        cadet.facing = facing;
         const anim = "march-" + facing;
         if (cadet.getCurAnim()?.name !== anim) cadet.play(anim);
     });
@@ -120,7 +123,7 @@ function leave(cadet, words) {
 }
 
 // E makes Rev bite; any cadet within reach is sent packing.
-export function enableBite(player, { canBite = () => true } = {}) {
+export function enableBite(player, { canBite = () => true, onBite = () => {} } = {}) {
     let readyAt = 0;
     onKeyPress("e", () => {
         if (time() < readyAt || !canBite()) return;
@@ -128,5 +131,6 @@ export function enableBite(player, { canBite = () => true } = {}) {
         const victim = findBiteTarget(player.pos, get("cadet"));
         popText(victim ? "CHOMP!" : "chomp", player.pos.add(0, -44), victim ? 20 : 14);
         if (victim) leave(victim, "Ow!");
+        onBite();
     });
 }

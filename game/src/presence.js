@@ -1,3 +1,4 @@
+import { validCadets } from "./cadet-state.js";
 const DIRECTIONS = new Set(["up", "down", "left", "right"]);
 
 export function validPosition(value, bounds) {
@@ -43,6 +44,7 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
             if (id === socket.id
                 || !validPosition(row, bounds) || !DIRECTIONS.has(row.direction)) continue;
             latest.set(id, { x: row.x, y: row.y, direction: row.direction, active: true,
+                cadets: validCadets(row.cadets, bounds) ? row.cadets : [],
                 digging: row.digging === true, sniffing: row.sniffing === true && row.digging !== true });
         }
         for (const id of records.keys()) if (!latest.has(id)) records.delete(id);
@@ -77,9 +79,12 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
             if (!socket.connected) return;
             const value = getLocal();
             const changed = !lastSent || value.x !== lastSent.x || value.y !== lastSent.y
-                || value.direction !== lastSent.direction || value.sniffing !== lastSent.sniffing;
+                || value.direction !== lastSent.direction || value.sniffing !== lastSent.sniffing
+                || JSON.stringify(value.cadets) !== JSON.stringify(lastSent.cadets);
+            const membershipChanged = (value.cadets ?? []).map((c) => c.id).join(",")
+                !== (lastSent?.cadets ?? []).map((c) => c.id).join(",");
             const elapsed = now() - lastSentAt;
-            if ((changed && elapsed >= 0.1 - 1e-9) || elapsed >= 1) send();
+            if (membershipChanged || (changed && elapsed >= 0.1 - 1e-9) || elapsed >= 1) send();
         },
         bite() {
             if (!disposed && socket.connected) {

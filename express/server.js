@@ -28,6 +28,22 @@ const validRoom = (room) => typeof room === "string" && Object.hasOwn(rooms, roo
 const validCoordinates = (data) => data && Number.isFinite(data.x) && Number.isFinite(data.y);
 const validPosition = (data) => validCoordinates(data) && directions.has(data.direction)
     && (data.sniffing === undefined || typeof data.sniffing === "boolean");
+const mapSizes = { "kyle-field": [1440, 640], "aggie-park": [1920, 960], "drill-field": [1080, 480] };
+function validCadets(value, room) {
+  if (value === undefined) return true;
+  if (!Array.isArray(value) || value.length > 128) return false;
+  const ids = new Set();
+  const [width, height] = mapSizes[room];
+  return value.every((row) => {
+    if (!row || typeof row.id !== "string" || !/^[a-zA-Z0-9_-]{1,64}$/.test(row.id)
+        || ids.has(row.id) || !validCoordinates(row) || !directions.has(row.direction)
+        || typeof row.moving !== "boolean" || row.x < 32 || row.x > width - 32
+        || row.y < 32 || row.y > height - 32) return false;
+    ids.add(row.id);
+    return true;
+  });
+}
+const copyCadets = (data) => (data.cadets ?? []).map(({ id, x, y, direction, moving }) => ({ id, x, y, direction, moving }));
 const broadcastRoom = (room) => io.to(room).emit("update_data", {room: rooms[room]});
 
 //socket
@@ -43,9 +59,10 @@ io.on('connection', (socket) => {
 
   socket.on('join_room', (data) => {
     const room = data?.room;
-    if (!validRoom(room) || !validPosition(data)) return;
+    if (!validRoom(room) || !validPosition(data) || !validCadets(data.cadets, room)) return;
     if (socket.data.roomId !== room) removePlayer();
     const player = rooms[room][socket.id] ??= { digging: false };
+    player.cadets = copyCadets(data);
     player.x = data.x;
     player.y = data.y;
     player.direction = data.direction;
@@ -57,9 +74,10 @@ io.on('connection', (socket) => {
   
   socket.on('update_position', (data) => {
     const room = socket.data.roomId;
-    if (!validRoom(room) || !validPosition(data)) return;
+    if (!validRoom(room) || !validPosition(data) || !validCadets(data.cadets, room)) return;
     const player = rooms[room][socket.id];
     if (!player) return;
+    player.cadets = copyCadets(data);
     player.x = data.x;
     player.y = data.y;
     player.direction = data.direction;

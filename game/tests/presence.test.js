@@ -28,6 +28,26 @@ function fixture() {
 }
 const row = (id = "other", x = 300, direction = "left") => ({ id, x, y: 300, direction });
 
+test("cadets send while owner stands still, remove immediately, and republish on reconnect", () => {
+    const f = fixture(); f.connect();
+    const cadet = { id: "1", x: 400, y: 300, direction: "down", moving: true };
+    const local = { x: 100, y: 100, direction: "down", cadets: [cadet] };
+    f.local(local); f.presence.step();
+    assert.deepEqual(f.emitted.at(-1).data.cadets, [cadet]);
+    f.local({ ...local, cadets: [{ ...cadet, x: 410 }] });
+    f.at(0.1); f.presence.step();
+    assert.equal(f.emitted.at(-1).data.cadets[0].x, 410);
+    f.socket.connected = false; f.handlers.get("disconnect")(); f.connect();
+    assert.equal(f.emitted.at(-2).data.cadets[0].x, 410);
+    f.local({ ...local, cadets: [] }); f.presence.step();
+    assert.deepEqual(f.emitted.at(-1).data.cadets, []);
+    f.receive({ other: { ...row(), cadets: [cadet] }, self: { ...row(), cadets: [cadet] } });
+    assert.deepEqual(f.presence.records.get("other").cadets, [cadet]);
+    assert.equal(f.presence.records.has("self"), false);
+    f.receive({ other: { ...row(), cadets: [{ ...cadet, x: -1 }] } });
+    assert.deepEqual(f.presence.records.get("other").cadets, []);
+});
+
 test("sniffing toggles send without movement and snapshot digging takes priority", () => {
     const f = fixture(); f.connect();
     f.local({ x: 100, y: 100, direction: "down", sniffing: true });
