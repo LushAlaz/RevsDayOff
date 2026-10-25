@@ -18,6 +18,7 @@ import { addDirtEffect } from "../dirt.js";
 import { addBevoView } from "../bevo.js";
 import { isBevoActive } from "../bevo-state.js";
 import { setSceneMusic, bevoRoars } from "../music.js";
+import { transitionTo } from "../transition.js";
 
 scene("mapSelect", () => {
     setSceneMusic("mapSelect");
@@ -47,10 +48,11 @@ scene("mapSelect", () => {
     }
     function travel() {
         if (traveling) return;
-        traveling = true;
+        // false while the wipe that brought us here is still clearing, so a quick Enter can retry
+        traveling = transitionTo("explore", { mapId: selected.id }, { label: selected.name.toUpperCase() });
+        if (!traveling) return;
         session.mapId = selected.id;
         setCursor("default");
-        go("explore", { mapId: selected.id });
     }
     // Quiet checker texture and inset frames echo a handheld RPG menu.
     for (let y = 0; y < 540; y += 16) {
@@ -197,7 +199,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         },
     });
     // Registered before the HUD's own Esc handler, so Esc with the bag open only closes the bag.
-    onKeyPress("escape", () => { if (!hud.isBagOpen() && !loot.cancel()) go("mapSelect"); });
+    onKeyPress("escape", () => { if (!hud.isBagOpen() && !loot.cancel()) transitionTo("mapSelect", undefined, { label: "CAMPUS MAP" }); });
     const hud = addHud({
         coins: session.coins,
         items: getBagItems(),
