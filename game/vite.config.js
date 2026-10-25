@@ -19,7 +19,7 @@ const kaplayCongrats = () => {
 export default defineConfig(({ mode }) => ({
     envDir: gameEnvDir,
     define: {
-        "import.meta.env.NEXT_PUBLIC_NETWORK_SERVER_DOMAIN": JSON.stringify(
+        "import.meta.env.VITE_PUBLIC_NETWORK_SERVER_DOMAIN": JSON.stringify(
             loadEnv(mode, gameEnvDir, "NEXT_PUBLIC_NETWORK_SERVER_DOMAIN").NEXT_PUBLIC_NETWORK_SERVER_DOMAIN || "",
         ),
     },
