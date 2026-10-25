@@ -5,6 +5,7 @@ import { generateLoot, createLootController } from "../loot.js";
 import { addLootUI } from "../loot-ui.js";
 import { session, stealItem, getBagItems } from "../session.js";
 import { addHud } from "../objects/hud.js";
+import { addDucks } from "../objects/ducks.js";
 import { MAPS, getMap, cycleMap } from "../maps.js";
 import { drawLandscape } from "../landscapes.js";
 import { addCadet, cadetSpawnPoint, enableBite } from "../objects/cadet.js";
@@ -232,6 +233,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         getSniffing: () => loot.phase === "exploration" && loot.sniffing && !hud.isBagOpen(),
     });
     if (map.id === "drill-field") addBevoView(player, multiplayer.boss);
+    if (map.pond) addDucks(map.pond, player, { canTalk: () => loot.canInteract && !isKeyDown("x") && !hud.isBagOpen() });
     enableBite(player, {
         onInteract: () => multiplayer.boss.summon(player.pos),
         canBite: () => loot.phase !== "challenge" && !hud.isBagOpen() && !stunned(),

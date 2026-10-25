@@ -1,14 +1,42 @@
 import { drawField } from "./field.js";
 import { SHOP } from "./shop.js";
 
+// Everything at or below this layer is flat ground that Rev always walks over.
+const GROUND_LAYER = -90;
+// One baked ground picture per map, reused on every visit.
+const bakedGround = new Map();
+
+// Paint the ground blocks once onto a canvas and draw that as a single sprite.
+// Thousands of tiny rect objects were being updated and drawn every frame.
+function addGround(mapId, blocks, width, height) {
+    if (!bakedGround.has(mapId)) {
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        // paint lower layers first; sort is stable, so ties keep their draw order like z() does
+        for (const block of blocks.sort((a, b) => a.layer - b.layer)) {
+            ctx.fillStyle = `rgb(${block.tint.join(",")})`;
+            ctx.fillRect(block.x, block.y, block.width, block.height);
+        }
+        bakedGround.set(mapId, loadSprite(null, canvas));
+    }
+    const ground = bakedGround.get(mapId);
+    add([pos(0, 0), z(-100), {
+        draw() { if (ground.data) drawSprite({ sprite: ground.data }); },
+    }]);
+}
+
 export function drawLandscape(map) {
     if (map.id === "kyle-field") { drawField(); return; }
+    const groundBlocks = [];
     function patch(x, y, w, h, tint, layer = -95, radius = 0) {
         const snap = (n) => Math.round(n / 4) * 4;
         x = snap(x); y = snap(y);
         w = Math.max(4, snap(w)); h = Math.max(4, snap(h));
         const block = (dx, dy, width, height) => {
-            add([rect(width, height), pos(x + dx, y + dy), color(...tint), z(layer)]);
+            if (layer <= GROUND_LAYER) groundBlocks.push({ x: x + dx, y: y + dy, width, height, tint, layer });
+            else add([rect(width, height), pos(x + dx, y + dy), color(...tint), z(layer)]);
         };
         const corner = Math.min(snap(radius / 2), Math.floor(w / 12) * 4, Math.floor(h / 12) * 4);
         if (!corner) { block(0, 0, w, h); return; }
@@ -116,4 +144,5 @@ export function drawLandscape(map) {
     patch(0, h - 4, w, 4, [94, 142, 76], -90);
     patch(0, 0, 4, h, [94, 142, 76], -90);
     patch(w - 4, 0, 4, h, [94, 142, 76], -90);
+    addGround(map.id, groundBlocks, w, h);
 }
