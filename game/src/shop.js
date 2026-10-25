@@ -14,7 +14,8 @@ export function isNearEntrance(position, point, radius = SHOP.radius) {
 
 export function addSceneEntrance(player, { point, label, target, args, radius = SHOP.radius, canInteract = () => true }) {
     const prompt = add([
-        rect(360, 40, { radius: 6 }), pos(center().x, height() - 28),
+        // sits above the bottom-right coin/bag HUD so the two never overlap
+        rect(360, 40, { radius: 6 }), pos(center().x, height() - 112),
         anchor("center"), fixed(), z(20), color(50, 16, 24),
     ]);
     prompt.add([text(label, { font: "pixel", size: 8 }), anchor("center")]);
