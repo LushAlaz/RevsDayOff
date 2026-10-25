@@ -1,19 +1,6 @@
-// ---------------------------------------------------------------
-// Intro story for Rev's Day Off, in the style of a Pokemon text box.
-//
-//  - A text box sits along the bottom of a black screen, two lines tall.
-//  - Text types out letter by letter at a reading pace, pausing briefly
-//    at commas and full stops, so it feels like it's being read to you.
-//  - When the box is full, a little arrow bobs. Press to continue and the
-//    lines scroll up to make room for the next one, just like Pokemon.
-//  - Hold Space / Enter / the mouse to make the text go faster.
-//  - Esc skips the whole intro.
-//
-// Needs: public/sprites/dialog-box.png, public/sprites/next-arrow.png,
-//        public/fonts/press-start-2p.woff2, public/sounds/advance.wav
-// ---------------------------------------------------------------
+import { session } from "../session.js";
 
-// Edit the story here. Each entry is one "message"; long ones scroll.
+// each string is one line
 const STORY = [
     "Howdy! This is Reveille, First Lady of Aggieland.",
     "Every day, Rev is on duty. Classes, football games, and more photos than she can count.",
@@ -22,9 +9,8 @@ const STORY = [
     "Rally towels, old jerseys, even a lost Aggie Ring or two.",
     "Marcel Reed is buying up Aggie memorabilia, and he pays in coins.",
     "Your mission: help Rev sniff out and dig up treasure around campus.",
-    "Start at Kyle Field. Earn enough coins to unlock Simpson Drill Field and Aggie Park.",
     "Spend your coins on upgrades to sniff sharper, dig faster, and find rarer treasure.",
-    "Ready, Rev? Time to dig in. Gig 'em!",
+    "Ready, Rev? Time to dig in. Gig 'em!"
 ];
 
 const NEXT_SCENE = "mapSelect";  // where to go when the story ends
@@ -198,6 +184,7 @@ export function introScene() {
         function finish() {
             if (state === "done") return;
             state = "done";
+            session.introPlayed = true;
             go(NEXT_SCENE);
         }
 

@@ -92,3 +92,24 @@ test("presence sends the name when joining and only keeps valid names from other
     assert.equal(presence.records.get("unnamed").displayName, null);
     presence.dispose();
 });
+
+test("blocked localStorage access cannot crash profile loading or saving", (t) => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+    const oldProfile = { ...profile };
+    t.after(() => {
+        if (original) Object.defineProperty(globalThis, "localStorage", original);
+        else delete globalThis.localStorage;
+        Object.assign(profile, oldProfile);
+    });
+    Object.defineProperty(globalThis, "localStorage", {
+        configurable: true,
+        get() { throw new Error("Storage blocked"); },
+    });
+    profile.username = "";
+    profile.displayName = "";
+    assert.doesNotThrow(() => loadProfile());
+    assert.equal(hasProfile(), false);
+    assert.doesNotThrow(() => saveProfile("rev_fan", "Rev Fan"));
+    assert.equal(hasProfile(), true);
+    assert.equal(profile.displayName, "Rev Fan");
+});

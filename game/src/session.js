@@ -1,10 +1,86 @@
 import { ITEMS, RARITIES } from "./items.js";
 
-export const session = { inventory: [], coins: 0, mapId: "kyle-field" };
+const COINS_STORAGE_KEY = "revsdayoff.coins";
+const BAG_STORAGE_KEY = "revsdayoff.bag";
+const INTRO_STORAGE_KEY = "revsdayoff.introPlayed";
+
+function readLocal(key) {
+    try {
+        return globalThis.localStorage?.getItem(key) ?? null;
+    } catch {
+        return null;
+    }
+}
+
+function writeLocal(key, value) {
+    try {
+        globalThis.localStorage?.setItem(key, value);
+    } catch {
+        // Continue playing with in-memory progress when storage is unavailable.
+    }
+}
+
+function restoreBag() {
+    try {
+        const ids = JSON.parse(readLocal(BAG_STORAGE_KEY));
+        if (!Array.isArray(ids)) return [];
+        return ids.flatMap((id) => {
+            const item = ITEMS.find((entry) => entry.id === id);
+            return item ? [{ ...item }] : [];
+        });
+    } catch {
+        return [];
+    }
+}
+
+// Observe the shared array so loot awards, sales, and cadet theft save immediately.
+// Keep the same array reference held by controllers throughout the game.
+const inventory = new Proxy(restoreBag(), {
+    set(bag, property, value) {
+        const changed = Reflect.set(bag, property, value);
+        writeLocal(BAG_STORAGE_KEY, JSON.stringify(bag.filter(Boolean).map((item) => item.id)));
+        return changed;
+    },
+    deleteProperty(bag, property) {
+        const changed = Reflect.deleteProperty(bag, property);
+        writeLocal(BAG_STORAGE_KEY, JSON.stringify(bag.filter(Boolean).map((item) => item.id)));
+        return changed;
+    },
+});
+let introPlayed = readLocal(INTRO_STORAGE_KEY) === "true";
+
+function restoreCoins() {
+    try {
+        const saved = globalThis.sessionStorage?.getItem(COINS_STORAGE_KEY);
+        if (saved == null || !/^\d+$/.test(saved)) return 0;
+        const value = Number(saved);
+        return Number.isSafeInteger(value) && value >= 0 ? value : 0;
+    } catch {
+        return 0;
+    }
+}
+
+let coins = restoreCoins();
+export const session = {
+    inventory,
+    get introPlayed() { return introPlayed; },
+    set introPlayed(value) {
+        introPlayed = Boolean(value);
+        writeLocal(INTRO_STORAGE_KEY, String(introPlayed));
+    },
+    get coins() { return coins; },
+    set coins(value) {
+        coins = value;
+        try {
+            globalThis.sessionStorage?.setItem(COINS_STORAGE_KEY, String(value));
+        } catch {
+            // storage messing up, keep the current balance
+        }
+    },
+    mapId: "kyle-field",
+};
 
 export function startNewGame() {
-    session.inventory.length = 0;
-    session.coins = 0;
     session.mapId = "kyle-field";
 }
 

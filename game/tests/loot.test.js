@@ -200,7 +200,7 @@ test("timeout and cancellation never award or consume loot", () => {
     }
 });
 
-test("fresh field entries regenerate loot while the session bag persists until new Play", () => {
+test("fresh field entries regenerate loot while the session bag persists across Play", () => {
     startNewGame();
     const first = generateLoot({ bounds: FIELD_LAYOUT.bounds, obstacle: SHOP.obstacle,
         entrance: SHOP.entrance, random: seeded(10) });
@@ -216,7 +216,7 @@ test("fresh field entries regenerate loot while the session bag persists until n
     assert.equal(session.inventory.length, 1);
     const bag = session.inventory;
     startNewGame();
-    assert.equal(bag.length, 0);
+    assert.equal(bag.length, 1);
 });
 
 test("the found popup clears sooner than a miss, which stays up for the cadet warning", () => {

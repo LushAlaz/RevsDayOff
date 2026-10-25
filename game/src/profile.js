@@ -51,9 +51,10 @@ export function hasProfile() {
 }
 
 // Storage can be missing or throw (private windows, blocked site data), so every access is guarded.
-export function loadProfile(storage = globalThis.localStorage) {
+export function loadProfile(storage) {
     try {
-        const saved = JSON.parse(storage?.getItem(STORAGE_KEY) ?? "null");
+        const target = storage === undefined ? globalThis.localStorage : storage;
+        const saved = JSON.parse(target?.getItem(STORAGE_KEY) ?? "null");
         if (validUsername(saved?.username) && validDisplayName(saved?.displayName)) {
             profile.username = saved.username;
             profile.displayName = saved.displayName;
@@ -62,10 +63,11 @@ export function loadProfile(storage = globalThis.localStorage) {
     return profile;
 }
 
-export function saveProfile(username, displayName, storage = globalThis.localStorage) {
+export function saveProfile(username, displayName, storage) {
     profile.username = username;
     profile.displayName = displayName;
     try {
-        storage?.setItem(STORAGE_KEY, JSON.stringify({ username, displayName }));
+        const target = storage === undefined ? globalThis.localStorage : storage;
+        target?.setItem(STORAGE_KEY, JSON.stringify({ username, displayName }));
     } catch { /* still named for this visit */ }
 }

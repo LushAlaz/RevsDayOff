@@ -9,7 +9,7 @@
 // art stays sharp at any window size.
 // ---------------------------------------------------------------
 
-import { startNewGame } from "../session.js";
+import { session, startNewGame } from "../session.js";
 import { hasProfile } from "../profile.js";
 
 export function titleScene() {
@@ -34,11 +34,15 @@ export function titleScene() {
         setCamPos(center());
         setBackground(rgb(24, 20, 28)); // colour of the bars around the screen
 
+        let starting = false;
         function startGame() {
+            if (starting) return;
+            starting = true;
             setCursor("default");
-            startNewGame(); // empty the bag from the last run
-            // first time: pick a name, then the intro. The intro goes on to mapSelect when it ends.
-            go(hasProfile() ? "intro" : "profile");
+            startNewGame();
+            const next = session.introPlayed ? "mapSelect" : "intro";
+            if (hasProfile()) go(next);
+            else go("profile", { next, back: "title" });
         }
 
         // a 320x240 "screen" that everything below is added to.

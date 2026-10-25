@@ -8,10 +8,11 @@
 import {
     profile, saveProfile, acceptsChar, finishDisplayName, profileError, usernameError, USERNAME_MAX, DISPLAY_NAME_MAX,
 } from "../profile.js";
+import { session } from "../session.js";
 
 export function profileScene() {
     // next: where to go after saving; back: where Esc goes
-    scene("profile", ({ next = "intro", back = "title" } = {}) => {
+    scene("profile", ({ next = session.introPlayed ? "mapSelect" : "intro", back = "title" } = {}) => {
         setCamPos(center());
         setCursor("default");
         setBackground(rgb(31, 36, 36));
@@ -20,6 +21,7 @@ export function profileScene() {
         const values = { username: profile.username, displayName: profile.displayName };
         let active = "username";
         let error = "";
+        let leaving = false;
 
         const fields = [
             { key: "username", title: "USERNAME", y: 196, max: USERNAME_MAX,
@@ -53,7 +55,19 @@ export function profileScene() {
         // Every key on this screen goes through the browser's keydown, in the order it was typed.
         // (KAPLAY's onCharInput lowercases letters, and its key events wait for the next frame,
         // so a quick Enter + letter could land in the wrong box.)
-        let leaving = false;
+        function advance() {
+            if (leaving) return;
+            if (active === "username") {
+                error = usernameError(values.username);
+                if (!error) active = "displayName";
+            } else if (save()) {
+                leaving = true;
+            }
+        }
+        const continueButton = add([rect(240, 40), pos(360, 452), area(), opacity(0)]);
+        continueButton.onClick(advance);
+        continueButton.onHover(() => setCursor("pointer"));
+        continueButton.onHoverEnd(() => setCursor("default"));
         function typed(event) {
             if (leaving) return;
             const { key } = event;
@@ -62,12 +76,7 @@ export function profileScene() {
             if (key === "Tab" || key === "ArrowUp" || key === "ArrowDown") { swap(); return; }
             if (key === "Backspace") { values[active] = values[active].slice(0, -1); return; }
             if (key === "Enter") {
-                if (active === "username") {
-                    error = usernameError(values.username);
-                    if (!error) active = "displayName";
-                } else if (save()) {
-                    leaving = true;
-                }
+                if (!event.repeat) advance();
                 return;
             }
             if (key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey) return;

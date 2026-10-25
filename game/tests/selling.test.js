@@ -85,8 +85,9 @@ test("navigation, mouse selection, sell all, and closing guard sale actions", ()
     assert.equal(menu.open, true);
 });
 
-test("session coins survive shop menu visits and reset along with inventory on new Play", () => {
+test("session coins and bag survive shop menu visits and new Play", () => {
     startNewGame();
+    session.coins = 0;
     session.inventory.push({ id: "ring" });
     const firstVisit = createSellingController();
     firstVisit.openMenu();
@@ -98,8 +99,8 @@ test("session coins survive shop menu visits and reset along with inventory on n
     assert.equal(nextVisit.rows.length, 0);
     session.inventory.push({ id: "meal" });
     startNewGame();
-    assert.equal(session.coins, 0);
-    assert.equal(session.inventory.length, 0);
+    assert.equal(session.coins, 150);
+    assert.deepEqual(session.inventory, [{ id: "meal" }]);
 });
 
 test("counter interaction is restricted to the area below its front edge", () => {
