@@ -4,7 +4,7 @@ const cors = require("cors");
 const { createServer } = require("node:http");
 const { Server } = require("socket.io");
 const { createBevoState, createBevoController } = require("./bevo.js");
-const drillBounds = require("../game/src/world-geometry.json").drillField.bounds;
+const drillBounds = require("./world-geometry.json").drillField.bounds;
 
 // node --watch server.js
 // node --watch --env-file=.env.local server.js
