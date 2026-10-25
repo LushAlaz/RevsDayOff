@@ -6,7 +6,7 @@ import { createKnockbackPlayback } from "./knockback.js";
 
 export function addMultiplayer(player, map, { getSniffing = () => false, getCadets = () => [],
     onBevoState = () => {}, onBevoHit = () => {} } = {}) {
-    const socket = io(import.meta.env.NEXT_PUBLIC_NETWORK_SERVER_DOMAIN || "http://localhost:3001", {
+    const socket = io(import.meta.env.VITE_NETWORK_SERVER_URL || "http://localhost:3001", {
         transports: ["websocket"], autoConnect: false, forceNew: true,
     });
     const views = new Map();

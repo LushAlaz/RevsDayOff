@@ -165,7 +165,7 @@ io.on('connection', (socket) => {
 
 // express
 app.get('/', async (req, res) => {
-    res.json({ message: "Server Healthy", server: process.env.NEXT_PUBLIC_NETWORK_SERVER_DOMAIN, client: process.env.NEXT_PUBLIC_NETWORK_CLIENT_DOMAIN})
+    res.json({ message: "Server Healthy"})
 });
 
 app.get('/greetings', (req, res) => {

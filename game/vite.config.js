@@ -1,7 +1,4 @@
-import { defineConfig, loadEnv } from "vite";
-import { fileURLToPath } from "node:url";
-
-const gameEnvDir = fileURLToPath(new URL(".", import.meta.url));
+import { defineConfig } from "vite";
 
 const kaplayCongrats = () => {
     return {
@@ -16,13 +13,7 @@ const kaplayCongrats = () => {
     };
 };
 
-export default defineConfig(({ mode }) => ({
-    envDir: gameEnvDir,
-    define: {
-        "import.meta.env.NEXT_PUBLIC_NETWORK_SERVER_DOMAIN": JSON.stringify(
-            loadEnv(mode, gameEnvDir, "NEXT_PUBLIC_NETWORK_SERVER_DOMAIN").NEXT_PUBLIC_NETWORK_SERVER_DOMAIN || "",
-        ),
-    },
+export default defineConfig({
     // index.html out file will start with a relative path for script
     base: "./",
     server: {
@@ -45,4 +36,4 @@ export default defineConfig(({ mode }) => ({
         // Disable messages removing this line
         kaplayCongrats(),
     ],
-}));
+});
