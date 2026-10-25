@@ -36,6 +36,8 @@ Open the local URL printed in the terminal (normally `http://localhost:3000`). S
 | Stop the treasure challenge pointer | Space |
 | Open or close your bag | B, or click the bag icon |
 | Enter the shop / interact with the counter | Space |
+| Talk to the ducks at the Aggie Park pond | Space on the bank near them |
+| Read the barrel in the Good Bull shop | Space next to it |
 | Select a map | Click, or arrow keys and Enter |
 | Sell one selected item | Enter in the selling menu |
 | Sell everything in your bag | A in the selling menu |
