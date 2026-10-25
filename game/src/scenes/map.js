@@ -10,6 +10,8 @@ import { drawLandscape } from "../landscapes.js";
 import { addCadet, cadetSpawnPoint, enableBite } from "../objects/cadet.js";
 import { addMultiplayer } from "../multiplayer.js";
 import { addDirtEffect } from "../dirt.js";
+import { addBevoView } from "../bevo.js";
+import { isBevoActive } from "../bevo-state.js";
 
 scene("mapSelect", () => {
     setCamPos(center());
@@ -121,7 +123,7 @@ scene("mapSelect", () => {
         "Hold X: sniff for loot",
         "Space: dig / enter Good Bull",
         "B: open bag",
-        "E: bite cadets",
+        "E: bite / summon Bevo",
         "Esc: cancel / return to maps",
     ];
     controls.forEach((control, index) => label(control, 790, 302 + index * 16, 8));
@@ -156,6 +158,8 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     setBackground(map.id === "kyle-field" ? rgb(80, 0, 0) : rgb(66, 119, 64));
     drawLandscape(map);
     let multiplayer;
+    const bossActive = () => multiplayer?.boss.active === true;
+    const stunned = () => multiplayer?.boss.stunned === true;
     const cadets = new Map();
     let nextCadetId = 0;
     const loot = createLootController({
@@ -185,7 +189,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     const hud = addHud({
         coins: session.coins,
         items: getBagItems(),
-        canOpen: () => loot.phase !== "challenge",
+        canOpen: () => loot.phase !== "challenge" && !bossActive(),
     });
     // Mirror the session into the HUD: the coin counter counts up, and the bag refreshes when items are dug up or stolen.
     let bagKey = JSON.stringify(getBagItems());
@@ -196,19 +200,27 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         const key = JSON.stringify(items);
         if (key !== bagKey) { bagKey = key; hud.setItems(items); }
     });
-    const sniffing = () => isKeyDown("x") && !hud.isBagOpen();
+    const sniffing = () => isKeyDown("x") && !hud.isBagOpen() && !bossActive();
     const player = addPlayer({
         spawn: spawn ?? map.spawn,
         bounds: map.bounds,
         obstacles: map.obstacles,
         inventory: session.inventory,
         getMovementState: () => ({
-            locked: loot.phase === "challenge" || hud.isBagOpen(),
+            locked: loot.phase === "challenge" || hud.isBagOpen() || stunned(),
             sniffing: loot.phase === "exploration" && sniffing(),
         }),
     });
     player.onUpdate(() => loot.step(dt(), sniffing(), player.pos));
     multiplayer = addMultiplayer(player, map, {
+        onBevoState: (state) => {
+            if (isBevoActive(state)) { loot.suspend(); hud.closeBag(); }
+        },
+        onBevoHit: () => {
+            add([text("STUNNED!", { font: "pixel", size: 8 }), pos(player.pos.x, player.pos.y - 48),
+                anchor("center"), color(255, 210, 110), opacity(1), outline(2, rgb(65, 25, 10)),
+                move(vec2(0, -1), 25), lifespan(0.5), z(6)]);
+        },
         getCadets: () => {
             const result = [];
             for (const [id, cadet] of cadets) {
@@ -219,9 +231,14 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         },
         getSniffing: () => loot.phase === "exploration" && loot.sniffing && !hud.isBagOpen(),
     });
-    enableBite(player, { canBite: () => loot.phase !== "challenge", onBite: () => multiplayer.bite() });
+    if (map.id === "drill-field") addBevoView(player, multiplayer.boss);
+    enableBite(player, {
+        onInteract: () => multiplayer.boss.summon(player.pos),
+        canBite: () => loot.phase !== "challenge" && !hud.isBagOpen() && !stunned(),
+        onBite: () => multiplayer.bite(),
+    });
     onKeyPress("space", () => loot.stopSpinner());
     addLootUI(player, loot);
-    addFieldShop(player, () => loot.canInteract && !isKeyDown("x") && !hud.isBagOpen(), map.id);
+    addFieldShop(player, () => !bossActive() && loot.canInteract && !isKeyDown("x") && !hud.isBagOpen(), map.id);
     followPlayer(player, map.bounds);
 });

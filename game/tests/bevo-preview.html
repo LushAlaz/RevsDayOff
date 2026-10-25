@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><base href="/"><title>Bevo multiplayer preview</title></head>
+<body style="margin:0;overflow:hidden">
+<nav style="position:fixed;left:12px;bottom:8px;z-index:1000;background:#fff2d8;padding:6px">
+  <button id="marker">Enter at Bevo marker</button>
+  <button id="shop">Enter at Drill Field shop</button>
+  <button id="kyle">Enter Kyle Field</button>
+  <button id="leave">Leave map</button>
+  <button id="trace">Trace rendered movement</button>
+  <span>Production scenes. E: summon/bite. B: bag. X: sniff. Space: shop.</span>
+</nav>
+<output id="trace-output" style="position:fixed;left:12px;top:110px;max-width:600px;z-index:1000;background:#fff2d8;font:12px monospace"></output>
+<script type="module">
+import "../src/main.js";
+import { startNewGame } from "../src/session.js";
+import { getShopReturn } from "../src/maps.js";
+startNewGame();
+const observer = new URLSearchParams(location.search).has("observer");
+const enter = () => go("explore", { mapId: "drill-field", spawn: { x: observer ? 860 : 700, y: 240 } });
+document.getElementById("marker").onclick = enter;
+document.getElementById("shop").onclick = () => go("explore", getShopReturn("drill-field"));
+document.getElementById("kyle").onclick = () => go("explore", { mapId: "kyle-field" });
+document.getElementById("leave").onclick = () => go("mapSelect");
+let tracing = false, samples = [], traceStarted = 0;
+document.getElementById("trace").onclick = () => {
+    tracing = true; samples = []; traceStarted = performance.now();
+    document.getElementById("trace-output").textContent = "Waiting for rendered movement...";
+};
+// Observe the real production player, including its frame-by-frame collision
+// resolution. This diagnostic never moves players or changes boss state.
+setInterval(() => {
+    if (!tracing) return;
+    const player = get("*").find((actor) => typeof actor.applyForcedPosition === "function");
+    if (!player) return;
+    const { x, y } = player.pos, previous = samples.at(-1);
+    if (previous && previous.x === x && previous.y === y) return;
+    samples.push({ t: Math.round(performance.now() - traceStarted), x, y });
+    document.getElementById("trace-output").textContent = "Rendered positions (ms: x,y): "
+        + samples.slice(-18).map((p) => `${p.t}: ${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" | ");
+}, 16);
+enter();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+{
+  "hp": 300, "biteDamage": 10, "biteRange": 112, "biteCooldown": 0.4,
+  "marker": { "x": 780, "y": 240 }, "summonRange": 96, "radius": 40,
+  "chaseSpeed": 120, "chargeSpeed": 450, "spawnTime": 2, "chaseTime": 3,
+  "windupTime": 0.8, "chargeTime": 0.8, "recoveryTime": 1.2, "respawnTime": 30,
+  "stunTime": 0.5, "immunityTime": 1.5, "knockback": 96, "knockbackTime": 0.25
+}

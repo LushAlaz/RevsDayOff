@@ -1,10 +1,12 @@
+import geometry from "./world-geometry.json" with { type: "json" };
+
 export const SHOP = {
     position: { x: 24, y: 24 },
     width: 160,
     height: 180,
     entrance: { x: 104, y: 204 },
     returnSpawn: { x: 104, y: 252 },
-    obstacle: { left: 40, top: 48, right: 168, bottom: 148 },
+    obstacle: geometry.shopObstacle,
     radius: 80,
 };
 

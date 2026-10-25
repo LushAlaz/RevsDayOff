@@ -213,3 +213,13 @@ test("sniffing halves movement speed and locking stops all input directions", ()
         assert.equal(player.animation, null);
     }
 });
+
+test("server-forced movement still sweeps obstacles and clamps the complete player footprint", () => {
+    const player = addPlayer({ spawn: { x: 168, y: 250 },
+        obstacles: [{ left: 200, top: 200, right: 300, bottom: 300 }],
+        getMovementState: () => ({ locked: true }) });
+    player.applyForcedPosition({ x: 500, y: 260 });
+    assert.deepEqual(player.pos, { x: 168, y: 260 });
+    player.applyForcedPosition({ x: -50, y: 1000 });
+    assert.deepEqual(player.pos, { x: 32, y: 508 });
+});
