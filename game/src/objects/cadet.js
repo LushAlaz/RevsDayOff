@@ -1,14 +1,3 @@
-// ---------------------------------------------------------------
-// Senior cadet enemy: khakis, riding pants, and senior boots.
-// Marches toward a target (Rev) and turns to face the way he's walking.
-// One spawns each time Rev fails a dig challenge; she bites him away with E.
-// If he reaches her first, he takes an item from her bag and leaves.
-//
-// Sprite sheet: public/sprites/cadet-senior.png
-//   32x32 frames, 3 per row, one row per direction:
-//   row 0 down, row 1 up, row 2 left, row 3 right
-// ---------------------------------------------------------------
-
 export const CADET_SPAWN_DISTANCE = 420; // how far from Rev he appears
 export const CADET_SPAWN_MARGIN = 48;    // keep his whole body inside the map
 export const BITE_RANGE = 80;            // center-to-center reach of a bite
@@ -131,12 +120,11 @@ function leave(cadet, words) {
 }
 
 // E makes Rev bite; any cadet within reach is sent packing.
-export function enableBite(player, { canBite = () => true, onBite = () => {} } = {}) {
+export function enableBite(player, { canBite = () => true } = {}) {
     let readyAt = 0;
     onKeyPress("e", () => {
         if (time() < readyAt || !canBite()) return;
         readyAt = time() + BITE_COOLDOWN;
-        onBite();
         const victim = findBiteTarget(player.pos, get("cadet"));
         popText(victim ? "CHOMP!" : "chomp", player.pos.add(0, -44), victim ? 20 : 14);
         if (victim) leave(victim, "Ow!");
