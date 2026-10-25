@@ -167,6 +167,36 @@ test("server snapshot protocol preserves records and cleans up room membership",
         await waitFor(() => !Object.hasOwn(network.rooms["kyle-field"], observerId));
     });
 
+    await t.test("cadets belong to the sender, reach late joiners, and reject invalid snapshots", async () => {
+        const cadet = { id: "1", x: 600, y: 300, direction: "left", moving: true };
+        await deliver(b, "update_position", { ...locals[1], id: a.id, cadets: [cadet] });
+        await waitFor(() => presences[0].records.get(b.id)?.cadets.length === 1);
+        assert.deepEqual(presences[0].records.get(b.id).cadets, [cadet]);
+        assert.deepEqual(network.rooms["kyle-field"][a.id].cadets, []);
+        assert.equal(presences[2].records.has(b.id), false);
+        const observer = connectSocket(url, { transports: ["websocket"], autoConnect: false, forceNew: true });
+        sockets.push(observer);
+        const late = createPresence({ socket: observer, mapId: "kyle-field",
+            bounds: { left: 0, top: 0, right: 1440, bottom: 640 },
+            getLocal: () => locals[0], now: () => performance.now() / 1000 });
+        presences.push(late);
+        observer.connect();
+        await once(observer, "connect");
+        await waitFor(() => late.records.get(b.id)?.cadets.length === 1);
+        for (const cadets of [null, [cadet, cadet], [{ ...cadet, x: -1 }],
+            [{ ...cadet, direction: "bad" }], [{ ...cadet, moving: "yes" }], Array(129).fill(cadet)]) {
+            await deliver(b, "update_position", { ...locals[1], cadets });
+            assert.deepEqual(original.cadets, [cadet]);
+        }
+        await deliver(b, "update_position", { ...locals[1], cadets: [{ ...cadet, moving: false }] });
+        await waitFor(() => late.records.get(b.id)?.cadets[0]?.moving === false);
+        await deliver(b, "update_position", { ...locals[1], cadets: [] });
+        await waitFor(() => late.records.get(b.id)?.cadets.length === 0);
+        const observerId = observer.id;
+        late.dispose();
+        await waitFor(() => !Object.hasOwn(network.rooms["kyle-field"], observerId));
+    });
+
     await t.test("switching maps removes old membership and disconnect broadcasts departure", async () => {
         await deliver(b, "join_room", { room: "drill-field", ...locals[1] });
         await waitFor(() => !presences[0].records.has(b.id) && presences[2].records.has(b.id));

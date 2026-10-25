@@ -5,6 +5,13 @@ room only when exploring the same map. Press **E** to chomp: nearby clients see 
 brief CHOMP effect at the transmitted location. Remote players have no collision
 or effect on local loot, inventory, or cadets. The shop remains private.
 
+Cadets chasing another player are visible to everyone on that map. Only misses
+and timeouts summon your own cadets; other players' cadets cannot chase you,
+steal your items, or be bitten by you. The owner's game controls the chase and
+shares cadet positions, facing, and movement state, including challenge pauses.
+Remote copies disappear when bitten, after a catch, or when their owner leaves.
+Late joiners see current cadets, and reconnecting owners republish active chases.
+
 Run the existing Express server on port 3001, then run `npm.cmd run dev` here.
 The game uses Socket.IO over WebSocket with `http://localhost:3001` by default.
 For another server, set `VITE_NETWORK_SERVER_URL` in `game/.env.local` and restart
@@ -12,7 +19,11 @@ Vite (or set it before building). Use an HTTPS server URL for an HTTPS game page
 If the server is unavailable, single-player gameplay continues; the client retries.
 
 The server sends current room snapshots as
-`{ room: { [socketId]: { x, y, direction, digging, sniffing } } }`. The dictionary key identifies
+`{ room: { [socketId]: { x, y, direction, digging, sniffing, cadets } } }`. Each
+cadet is `{ id, x, y, direction, moving }`; IDs are scoped to the socket owner.
+The server validates complete lists (maximum 128) and derives ownership from
+the connection. Movement updates are throttled to 10 per second; cadet additions
+and removals send immediately on the next presence step. The dictionary key identifies
 each player; no separate ID-fetch event is necessary. Players appear on the
 first snapshot and disappear on the next snapshot when they leave or disconnect.
 Stationary players stay visible. Server records are updated in place and removed

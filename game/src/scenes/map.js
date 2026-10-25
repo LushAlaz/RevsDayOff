@@ -117,6 +117,8 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     setBackground(map.id === "kyle-field" ? rgb(80, 0, 0) : rgb(66, 119, 64));
     drawLandscape(map);
     let multiplayer;
+    const cadets = new Map();
+    let nextCadetId = 0;
     const loot = createLootController({
         spots: generateLoot({ bounds: map.bounds, obstacles: map.obstacles, entrance: SHOP.entrance }),
         inventory: session.inventory,
@@ -132,10 +134,11 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         // and takes an item from her bag if he reaches her
         onFail: () => {
             const spawn = cadetSpawnPoint(player.pos, map.bounds);
-            addCadet(vec2(spawn.x, spawn.y), player, {
+            const cadet = addCadet(vec2(spawn.x, spawn.y), player, {
                 canMove: () => loot.phase !== "challenge",
                 steal: () => stealItem(),
             });
+            cadets.set(String(++nextCadetId), cadet);
         },
     });
     // Registered before the HUD's own Esc handler, so Esc with the bag open only closes the bag.
@@ -167,6 +170,14 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     });
     player.onUpdate(() => loot.step(dt(), sniffing(), player.pos));
     multiplayer = addMultiplayer(player, map, {
+        getCadets: () => {
+            const result = [];
+            for (const [id, cadet] of cadets) {
+                if (cadet.gone || !cadet.exists()) { cadets.delete(id); continue; }
+                result.push({ id, x: cadet.pos.x, y: cadet.pos.y, direction: cadet.facing, moving: cadet.moving });
+            }
+            return result;
+        },
         getSniffing: () => loot.phase === "exploration" && loot.sniffing && !hud.isBagOpen(),
     });
     enableBite(player, { canBite: () => loot.phase !== "challenge", onBite: () => multiplayer.bite() });
