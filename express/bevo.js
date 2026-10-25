@@ -1,7 +1,7 @@
-const geometry = require("../game/src/world-geometry.json");
+const geometry = require("./world-geometry.json");
 const bounds = geometry.drillField.bounds;
 const obstacles = [geometry.shopObstacle, ...geometry.drillField.trees.map((tree) => tree.obstacle)];
-const RULES = Object.freeze(require("../game/src/bevo-rules.json"));
+const RULES = Object.freeze(require("./bevo-rules.json"));
 const active = (boss) => !["dormant", "defeated"].includes(boss.phase);
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const unit = (x, y) => { const length = Math.hypot(x, y); return length ? { x: x / length, y: y / length } : { x: 0, y: 1 }; };
