@@ -1,4 +1,4 @@
-// Upgrades sold at the Good Bull shop. Each is bought once per game and resets with a new Play,
+// Upgrades sold at the Good Bull shop. Each is bought once and, like coins and the bag, is saved in the browser.
 // Prices and effects all live here so they're easy to tune.
 // For scale: clearing one map at normal luck earns roughly 220 coins.
 import { session } from "./session.js";
@@ -60,7 +60,7 @@ export function createUpgradeShop(state = session) {
         },
         openMenu() {
             this.open = true;
-            this.message = "Pick an upgrade. Each one lasts until you start a new game.";
+            this.message = "Pick an upgrade. Once bought, it's yours to keep.";
         },
         close() { this.open = false; },
         select(id) { if (this.open && UPGRADES.some((upgrade) => upgrade.id === id)) this.selectedId = id; },

@@ -3,6 +3,7 @@ import { ITEMS, RARITIES } from "./items.js";
 const COINS_STORAGE_KEY = "revsdayoff.coins";
 const BAG_STORAGE_KEY = "revsdayoff.bag";
 const INTRO_STORAGE_KEY = "revsdayoff.introPlayed";
+const UPGRADES_STORAGE_KEY = "revsdayoff.upgrades";
 
 function readLocal(key) {
     try {
@@ -47,6 +48,31 @@ const inventory = new Proxy(restoreBag(), {
         return changed;
     },
 });
+// Bought upgrade ids (catalog in upgrades.js), saved the same way as the bag so they
+// survive reloads and new games along with the coins that paid for them.
+function restoreUpgrades() {
+    try {
+        const ids = JSON.parse(readLocal(UPGRADES_STORAGE_KEY));
+        if (!Array.isArray(ids)) return [];
+        return [...new Set(ids.filter((id) => typeof id === "string" && /^[a-z]+$/.test(id)))];
+    } catch {
+        return [];
+    }
+}
+
+const saveUpgrades = (list) => writeLocal(UPGRADES_STORAGE_KEY, JSON.stringify(list.filter(Boolean)));
+const upgrades = new Proxy(restoreUpgrades(), {
+    set(list, property, value) {
+        const changed = Reflect.set(list, property, value);
+        saveUpgrades(list);
+        return changed;
+    },
+    deleteProperty(list, property) {
+        const changed = Reflect.deleteProperty(list, property);
+        saveUpgrades(list);
+        return changed;
+    },
+});
 let introPlayed = readLocal(INTRO_STORAGE_KEY) === "true";
 
 function restoreCoins() {
@@ -73,7 +99,7 @@ function restoreCoins() {
 let coins = restoreCoins();
 export const session = {
     inventory,
-    upgrades: [],
+    upgrades,
     get introPlayed() { return introPlayed; },
     set introPlayed(value) {
         introPlayed = Boolean(value);
@@ -87,8 +113,8 @@ export const session = {
     mapId: "kyle-field",
 };
 
+// Coins, the bag and upgrades are kept between games; a new game only starts back at Kyle Field.
 export function startNewGame() {
-    session.upgrades.length = 0;
     session.mapId = "kyle-field";
 }
 

@@ -53,15 +53,29 @@ test("buying takes the price once, refuses repeats and empty wallets", () => {
     assert.deepEqual(state.upgrades, ["redbull"]);
 });
 
-test("exact change works and upgrades reset with a new game", () => {
-    startNewGame();
+test("exact change works, and upgrades are saved in the browser and kept through a new game", (t) => {
+    const saved = {};
+    globalThis.localStorage = { getItem: (key) => saved[key] ?? null, setItem: (key, value) => { saved[key] = value; } };
+    t.after(() => { delete globalThis.localStorage; session.upgrades.length = 0; });
+    session.upgrades.length = 0;
     session.coins = 1000;
     assert.equal(buyUpgrade("crown").ok, true);
     assert.equal(session.coins, 0);
-    const list = session.upgrades;
+    assert.deepEqual(JSON.parse(saved["revsdayoff.upgrades"]), ["crown"]);
     startNewGame();
-    assert.equal(hasUpgrade("crown"), false);
-    assert.equal(session.upgrades, list, "same array, so anything holding it sees the reset");
+    assert.equal(hasUpgrade("crown"), true, "like coins and the bag, upgrades survive a new game");
+});
+
+test("saved upgrades load back on the next visit, ignoring junk", async (t) => {
+    const saved = { "revsdayoff.upgrades": JSON.stringify(["crown", "redbull", "crown", 7, "<b>", null]) };
+    globalThis.localStorage = { getItem: (key) => saved[key] ?? null, setItem: (key, value) => { saved[key] = value; } };
+    t.after(() => { delete globalThis.localStorage; });
+    // a fresh copy of the module, as if the page had been reloaded
+    const reloaded = await import(`../src/session.js?reload=${Date.now()}`);
+    assert.deepEqual([...reloaded.session.upgrades], ["crown", "redbull"]);
+    saved["revsdayoff.upgrades"] = "{broken";
+    const broken = await import(`../src/session.js?broken=${Date.now()}`);
+    assert.deepEqual([...broken.session.upgrades], []);
 });
 
 test("the Red Bull speeds Rev up", () => {

@@ -17,7 +17,7 @@ Your coins and bag sit in the bottom-right corner; click the bag or press **B** 
 
 ### Upgrades
 
-The **Upgrades** stand in the top-right of the Good Bull shop sells one-time upgrades. Walk up to it and press **Space**. Upgrades last until you start a new game.
+The **Upgrades** stand in the top-right of the Good Bull shop sells one-time upgrades. Walk up to it and press **Space**. Like coins and your bag, upgrades are saved in your browser and kept between games.
 
 | Upgrade | Price | Effect |
 | --- | ---: | --- |
