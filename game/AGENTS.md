@@ -36,7 +36,7 @@ This is a top-down Texas A&M game starring Reveille. Players explore Aggie locat
 ### Sprite pitfalls
 
 - `Reveille.png` has eleven 32 × 32 frames, displayed at 64 × 64: down 0–2, up 3–5, left 6–8, right 9–10. The side directions are separate animations; do not combine or mirror them.
-- Start facing down; use the first frame of the last facing direction when idle. Prefer horizontal facing for diagonals and avoid restarting a walking animation every frame.
+- Start facing down. Idle frames: down 0, up 3, left 6, right 6 mirrored horizontally. This idle-only mirroring is intentional because frames 9–10 are walking poses. Clear the flip before any walking animation. Prefer horizontal facing for diagonals and avoid restarting a walking animation every frame.
 - Inspect sprite sheets before configuring them. Ring and towel artwork each contain four horizontal frames; most other item assets are single frames.
 - KAPLAY interprets square brackets as styled-text markup. Use plain text or properly supported formatting for dynamic labels.
 - The A&M SVG needs explicit root dimensions for texture loading. Preserve its paths and colors.

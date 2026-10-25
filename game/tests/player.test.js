@@ -109,17 +109,41 @@ test("walking uses native directional frames without mirroring and idles facing 
     const player = addPlayer();
     for (const [key, animation, flipX, idle] of [
         ["a", "left", false, 6], ["w", "up", false, 3],
-        ["d", "right", false, 9], ["s", "down", false, 0],
+        ["d", "right", true, 6], ["s", "down", false, 0],
     ]) {
         keys = new Set([key]);
         player.update();
         assert.equal(player.animation, animation);
-        assert.equal(player.flipX, flipX);
+        assert.equal(player.flipX, false);
         keys.clear();
         player.update();
         assert.equal(player.animation, null);
         assert.equal(player.frame, idle);
         assert.equal(player.flipX, flipX);
+    }
+});
+
+test("right idle stays planted through idle and locked updates, then clears its flip for every walk", () => {
+    for (const [key, direction] of [["a", "left"], ["d", "right"], ["w", "up"], ["s", "down"]]) {
+        let locked = false;
+        const player = addPlayer({ getMovementState: () => ({ locked }) });
+        keys = new Set(["right"]);
+        player.update();
+        keys.clear();
+        player.update();
+        const position = { ...player.pos };
+        for (let i = 0; i < 3; i++) player.update();
+        locked = true;
+        keys.add(key);
+        player.update();
+        assert.equal(player.animation, null);
+        assert.equal(player.frame, 6);
+        assert.equal(player.flipX, true);
+        assert.deepEqual(player.pos, position);
+        locked = false;
+        player.update();
+        assert.equal(player.animation, direction);
+        assert.equal(player.flipX, false);
     }
 });
 

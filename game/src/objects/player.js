@@ -13,7 +13,8 @@ export function addPlayer({
         anchor("center"),
         { items: inventory },
     ]);
-    const idleFrames = { down: 0, up: 3, right: 9, left: 6 };
+    // Neither native right-facing frame is standing; mirror the left idle only.
+    const idleFrames = { down: 0, up: 3, right: 6, left: 6 };
     let facing = "down";
     let walking = false;
 
@@ -62,6 +63,7 @@ export function addPlayer({
             // Prefer horizontal facing on diagonals; each direction has its own frames.
             const direction = x !== 0 ? (x < 0 ? "left" : "right") : (y < 0 ? "up" : "down");
             if (!walking || direction !== facing) {
+                player.flipX = false;
                 player.play(direction);
                 facing = direction;
                 walking = true;
@@ -74,6 +76,7 @@ export function addPlayer({
         } else if (walking) {
             player.stop();
             player.frame = idleFrames[facing];
+            player.flipX = facing === "right";
             walking = false;
         }
         keepInsideField();
