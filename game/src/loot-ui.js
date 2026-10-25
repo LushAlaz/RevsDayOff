@@ -1,5 +1,6 @@
 import { RARITIES } from "./items.js";
 import { triggersCadet } from "./loot.js";
+import { addSniffingEffect } from "./sniffing-ui.js";
 
 export function addLootUI(player, loot) {
     const sniffLabel = add([

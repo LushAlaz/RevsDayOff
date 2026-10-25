@@ -27,6 +27,7 @@ test("server snapshot protocol preserves records and cleans up room membership",
         }
     };
     const effects = [[], [], []];
+    const finds = [[], [], []];
     const locals = [
         { x: 400, y: 300, direction: "right" },
         { x: 700, y: 300, direction: "left" },
@@ -38,7 +39,8 @@ test("server snapshot protocol preserves records and cleans up room membership",
         presences.push(createPresence({ socket, mapId: index === 2 ? "drill-field" : "kyle-field",
             bounds: { left: 0, top: 0, right: 1440, bottom: 640 },
             getLocal: () => locals[index], now: () => performance.now() / 1000,
-            onChomp: (value) => effects[index].push(value) }));
+            onChomp: (value) => effects[index].push(value),
+            onFound: (value) => finds[index].push(value) }));
         socket.connect();
         await once(socket, "connect");
     }
@@ -94,6 +96,75 @@ test("server snapshot protocol preserves records and cleans up room membership",
         assert.deepEqual(effects[0][0], { x: locals[1].x, y: locals[1].y });
         assert.equal(effects[1].length, 0);
         assert.equal(effects[2].length, 0);
+    });
+
+    await t.test("digging snapshots reach late joiners; validated finds stay in-room and never echo to the digger", async () => {
+        presences[1].setDigging(true);
+        await waitFor(() => presences[0].records.get(b.id)?.digging === true);
+        assert.equal(network.rooms["kyle-field"][b.id], original);
+        assert.equal(presences[2].records.has(b.id), false);
+
+        const observer = connectSocket(url, { transports: ["websocket"], autoConnect: false, forceNew: true });
+        sockets.push(observer);
+        const late = createPresence({ socket: observer, mapId: "kyle-field",
+            bounds: { left: 0, top: 0, right: 1440, bottom: 640 },
+            getLocal: () => locals[0], now: () => performance.now() / 1000 });
+        presences.push(late);
+        observer.connect();
+        await once(observer, "connect");
+        await waitFor(() => late.records.get(b.id)?.digging === true);
+
+        const rogue = sockets[3];
+        await deliver(rogue, "sniffing", { ...locals[0], active: true });
+        await deliver(rogue, "dug-up", locals[0]);
+        for (const value of [null, {}, { x: "400", y: 300 }, { x: 400 }]) {
+            await deliver(b, "dug-up", value);
+            await deliver(b, "sniffing", value);
+        }
+        await deliver(b, "sniffing", { ...locals[1], active: "yes" });
+        assert.equal(original.digging, true, "invalid messages cannot clear digging");
+        await deliver(b, "dug-up", { id: a.id, x: 700, y: 320 });
+        await waitFor(() => finds[0].length === 1 && presences[0].records.get(b.id)?.digging === false);
+        assert.deepEqual(finds[0], [{ id: b.id, x: 700, y: 320 }]);
+        assert.equal(finds[1].length, 0, "server excludes the sender");
+        assert.equal(finds[2].length, 0, "other maps do not receive finds");
+        assert.equal(original.digging, false);
+        const observerId = observer.id;
+        late.dispose();
+        await waitFor(() => !Object.hasOwn(network.rooms["kyle-field"], observerId));
+
+        presences[1].setDigging(false);
+        await waitFor(() => presences[0].records.get(b.id)?.digging === false);
+    });
+
+    await t.test("sniffing state reaches same-map peers and late joiners and stops during digging", async () => {
+        locals[1].sniffing = true;
+        await deliver(b, "update_position", locals[1]);
+        await waitFor(() => presences[0].records.get(b.id)?.sniffing === true);
+        assert.equal(presences[2].records.has(b.id), false);
+        const observer = connectSocket(url, { transports: ["websocket"], autoConnect: false, forceNew: true });
+        sockets.push(observer);
+        const late = createPresence({ socket: observer, mapId: "kyle-field",
+            bounds: { left: 0, top: 0, right: 1440, bottom: 640 },
+            getLocal: () => locals[0], now: () => performance.now() / 1000 });
+        presences.push(late);
+        observer.connect();
+        await once(observer, "connect");
+        await waitFor(() => late.records.get(b.id)?.sniffing === true);
+        await deliver(b, "update_position", { ...locals[1], sniffing: "yes" });
+        assert.equal(original.sniffing, true, "invalid sniffing state is ignored");
+        await deliver(b, "sniffing", { ...locals[1], active: true });
+        await waitFor(() => presences[0].records.get(b.id)?.digging === true);
+        assert.equal(presences[0].records.get(b.id).sniffing, false);
+        await deliver(b, "update_position", locals[1]);
+        assert.equal(original.sniffing, false, "updates cannot show sniffing during a challenge");
+        await deliver(b, "sniffing", { ...locals[1], active: false });
+        locals[1].sniffing = false;
+        await deliver(b, "update_position", locals[1]);
+        await waitFor(() => !presences[0].records.get(b.id)?.digging && !presences[0].records.get(b.id)?.sniffing);
+        const observerId = observer.id;
+        late.dispose();
+        await waitFor(() => !Object.hasOwn(network.rooms["kyle-field"], observerId));
     });
 
     await t.test("switching maps removes old membership and disconnect broadcasts departure", async () => {

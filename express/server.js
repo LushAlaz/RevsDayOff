@@ -26,7 +26,8 @@ const rooms = {
 const directions = new Set(["up", "down", "left", "right"]);
 const validRoom = (room) => typeof room === "string" && Object.hasOwn(rooms, room);
 const validCoordinates = (data) => data && Number.isFinite(data.x) && Number.isFinite(data.y);
-const validPosition = (data) => validCoordinates(data) && directions.has(data.direction);
+const validPosition = (data) => validCoordinates(data) && directions.has(data.direction)
+    && (data.sniffing === undefined || typeof data.sniffing === "boolean");
 const broadcastRoom = (room) => io.to(room).emit("update_data", {room: rooms[room]});
 
 //socket
@@ -44,10 +45,11 @@ io.on('connection', (socket) => {
     const room = data?.room;
     if (!validRoom(room) || !validPosition(data)) return;
     if (socket.data.roomId !== room) removePlayer();
-    const player = rooms[room][socket.id] ??= {};
+    const player = rooms[room][socket.id] ??= { digging: false };
     player.x = data.x;
     player.y = data.y;
     player.direction = data.direction;
+    player.sniffing = data.sniffing === true && !player.digging;
     socket.data.roomId = room;
     socket.join(room);
     broadcastRoom(room);
@@ -61,6 +63,7 @@ io.on('connection', (socket) => {
     player.x = data.x;
     player.y = data.y;
     player.direction = data.direction;
+    player.sniffing = data.sniffing === true && !player.digging;
     broadcastRoom(room);
   });
 
@@ -69,17 +72,34 @@ io.on('connection', (socket) => {
     if (!validRoom(room) || !rooms[room][socket.id] || typeof data?.item !== "string") return;
     const item = data.item;
     io.to(room).emit("display message", {room: "One player won a legendary item " + item});
-  })
+  });
 
   socket.on('chomp', (data) => {
     const room = socket.data.roomId;
     if (!validRoom(room) || !rooms[room][socket.id] || !validCoordinates(data)) return;
     socket.broadcast.to(room).emit("chomp", {x: data.x, y: data.y});
-  })
+  });
 
   socket.on("sniffing", (data) => {
-    
-  })
+    const room = socket.data.roomId;
+    if (!validRoom(room) || !rooms[room][socket.id] || !validCoordinates(data)
+        || typeof data.active !== "boolean") return;
+    rooms[room][socket.id].digging = data.active;
+    if (data.active) rooms[room][socket.id].sniffing = false;
+    broadcastRoom(room);
+    socket.broadcast.to(room).emit("sniffing", {id: socket.id, active: data.active, x: data.x, y: data.y});
+  });
+
+  socket.on("dug-up", (data) => {
+    const room = socket.data.roomId;
+    if (!validRoom(room) || !rooms[room][socket.id] || !validCoordinates(data)) return;
+    if (rooms[room][socket.id].digging) {
+      rooms[room][socket.id].digging = false;
+      broadcastRoom(room);
+    }
+    socket.broadcast.to(room).emit("dug-up", {id: socket.id, x: data.x, y: data.y});
+  });
+
   socket.on('disconnect', removePlayer);
 });
 
