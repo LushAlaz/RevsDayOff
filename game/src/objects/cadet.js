@@ -123,9 +123,10 @@ function leave(cadet, words) {
 }
 
 // E makes Rev bite; any cadet within reach is sent packing.
-export function enableBite(player, { canBite = () => true, onBite = () => {} } = {}) {
+export function enableBite(player, { canBite = () => true, onBite = () => {}, onInteract = () => false } = {}) {
     let readyAt = 0;
     onKeyPress("e", () => {
+        if (onInteract()) return;
         if (time() < readyAt || !canBite()) return;
         readyAt = time() + BITE_COOLDOWN;
         const victim = findBiteTarget(player.pos, get("cadet"));

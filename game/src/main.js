@@ -7,10 +7,12 @@ import "./scenes/shop.js";
 import { loadSprites } from "./sprites.js";
 import { loadCadetSprites } from "./objects/cadet.js";
 import { loadHudSprites } from "./objects/hud.js";
+import { loadBevoSprites } from "./bevo.js";
 
 loadSprites();
 loadCadetSprites();
 loadHudSprites();
+loadBevoSprites();
 titleScene();
 leaderboardScene();
 introScene();

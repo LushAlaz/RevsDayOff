@@ -2,16 +2,28 @@ import { io } from "socket.io-client";
 import { createPresence } from "./presence.js";
 import { addDirtEffect } from "./dirt.js";
 import { addSniffingEffect } from "./sniffing-ui.js";
+import { createKnockbackPlayback } from "./knockback.js";
 
-export function addMultiplayer(player, map, { getSniffing = () => false, getCadets = () => [] } = {}) {
+export function addMultiplayer(player, map, { getSniffing = () => false, getCadets = () => [],
+    onBevoState = () => {}, onBevoHit = () => {} } = {}) {
     const socket = io(import.meta.env.VITE_NETWORK_SERVER_URL || "http://localhost:3001", {
         transports: ["websocket"], autoConnect: false, forceNew: true,
     });
     const views = new Map();
     const cadetViews = new Map();
+    const localKnockback = createKnockbackPlayback(() => performance.now() / 1000);
     const presence = createPresence({
         socket, mapId: map.id, bounds: map.bounds, now: () => performance.now() / 1000,
         getLocal: () => ({ x: player.pos.x, y: player.pos.y, direction: player.facing, sniffing: getSniffing(), cadets: getCadets() }),
+        onBevoState,
+        onForcedMovement: (motion, serverNow) => {
+            if (motion) localKnockback.accept(motion, serverNow, player.pos);
+            else localKnockback.clear();
+        },
+        onBevoHit: (hit) => {
+            localKnockback.accept(hit, hit.startedAt, player.pos);
+            onBevoHit(hit);
+        },
         onFound: (position) => addDirtEffect(position, { announce: true }),
         onChomp: ({ x, y }) => {
             // The server supplies a location, not a socket ID. Do not guess an owner.
@@ -20,7 +32,13 @@ export function addMultiplayer(player, map, { getSniffing = () => false, getCade
                 move(vec2(0, -1), 30), lifespan(0.5, { fade: 0.2 }), z(6)]);
         },
     });
+    function updateForcedPosition() {
+        if (localKnockback.motion?.encounterId !== presence.boss.state?.encounterId) localKnockback.clear();
+        const forcedPosition = localKnockback.sample();
+        if (forcedPosition) player.applyForcedPosition(forcedPosition);
+    }
     player.onUpdate(() => {
+        updateForcedPosition();
         presence.step();
         const visibleCadets = new Set();
         for (const [owner, record] of presence.records) {
@@ -74,11 +92,15 @@ export function addMultiplayer(player, map, { getSniffing = () => false, getCade
                     outline(2, rgb(50, 35, 22)), z(4),
                 ]);
                 view = { actor, from: { x: record.x, y: record.y },
-                    target: { x: record.x, y: record.y }, started: time(), movedAt: -Infinity, diggingLabel };
+                    target: { x: record.x, y: record.y }, started: time(), movedAt: -Infinity, diggingLabel,
+                    knockback: createKnockbackPlayback(() => performance.now() / 1000) };
                 views.set(id, view);
             }
             const { actor } = view;
             view.diggingLabel.hidden = !record.digging;
+            if (view.knockback.motion?.encounterId !== presence.boss.state?.encounterId) view.knockback.clear();
+            if (record.knockback) view.knockback.accept(record.knockback, record.serverNow, actor.pos);
+            const forced = view.knockback.sample();
             if (record.x !== view.target.x || record.y !== view.target.y) {
                 view.from = { x: actor.pos.x, y: actor.pos.y };
                 view.target = { x: record.x, y: record.y };
@@ -86,9 +108,9 @@ export function addMultiplayer(player, map, { getSniffing = () => false, getCade
                 view.movedAt = time();
             }
             const progress = Math.min(1, (time() - view.started) / 0.1);
-            actor.pos.x = view.from.x + (view.target.x - view.from.x) * progress;
-            actor.pos.y = view.from.y + (view.target.y - view.from.y) * progress;
-            const walking = time() - view.movedAt < 0.15;
+            actor.pos.x = forced?.x ?? view.from.x + (view.target.x - view.from.x) * progress;
+            actor.pos.y = forced?.y ?? view.from.y + (view.target.y - view.from.y) * progress;
+            const walking = !forced && time() - view.movedAt < 0.15;
             const animation = walking ? record.direction : null;
             if (view.animation !== animation || view.direction !== record.direction) {
                 actor.flipX = !walking && record.direction === "right";
@@ -104,7 +126,7 @@ export function addMultiplayer(player, map, { getSniffing = () => false, getCade
     });
     // KAPLAY pauses rendering in background tabs; stationary presence should
     // continue independently of rendering.
-    const heartbeat = setInterval(() => presence.step(), 100);
+    const heartbeat = setInterval(() => { updateForcedPosition(); presence.step(); }, 100);
     onSceneLeave(() => {
         clearInterval(heartbeat);
         presence.dispose();

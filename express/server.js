@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require("cors");
 const { createServer } = require("node:http");
 const { Server } = require("socket.io");
+const { createBevoState, createBevoController } = require("./bevo.js");
+const drillBounds = require("../game/src/world-geometry.json").drillField.bounds;
 
 // node --watch server.js
 // node --watch --env-file=.env.local server.js
@@ -44,7 +46,31 @@ function validCadets(value, room) {
   });
 }
 const copyCadets = (data) => (data.cadets ?? []).map(({ id, x, y, direction, moving }) => ({ id, x, y, direction, moving }));
-const broadcastRoom = (room) => io.to(room).emit("update_data", {room: rooms[room]});
+const broadcastRoom = (room) => io.to(room).emit("update_data", {room: rooms[room], serverNow: performance.now() / 1000});
+const bevo = createBevoState();
+const bevoController = createBevoController(bevo, {
+  getPlayers: () => rooms["drill-field"], now: () => performance.now() / 1000,
+  onState: (state) => io.to("drill-field").emit("bevo_state", state),
+  onPlayersChanged: () => broadcastRoom("drill-field"),
+  onHit: (id, hit) => {
+    io.to(id).emit("bevo_hit", hit);
+    broadcastRoom("drill-field");
+  },
+});
+let bossTimer;
+server.on("listening", () => {
+  let previous = performance.now() / 1000;
+  bossTimer = setInterval(() => {
+    const current = performance.now() / 1000;
+    bevoController.step(Math.min(0.1, current - previous));
+    previous = current;
+  }, 50);
+  bossTimer.unref();
+});
+server.on("close", () => clearInterval(bossTimer));
+const validDrillPosition = (data, room) => room !== "drill-field"
+  || (data.x >= drillBounds.left + 32 && data.x <= drillBounds.right - 32
+    && data.y >= drillBounds.top + 32 && data.y <= drillBounds.bottom - 32);
 
 //socket
 io.on('connection', (socket) => {
@@ -54,32 +80,38 @@ io.on('connection', (socket) => {
     delete rooms[room][socket.id];
     socket.leave(room);
     delete socket.data.roomId;
+    if (room === "drill-field") bevoController.step(0);
     broadcastRoom(room);
   }
 
   socket.on('join_room', (data) => {
     const room = data?.room;
-    if (!validRoom(room) || !validPosition(data) || !validCadets(data.cadets, room)) return;
+    if (!validRoom(room) || !validPosition(data) || !validCadets(data.cadets, room) || !validDrillPosition(data, room)) return;
     if (socket.data.roomId !== room) removePlayer();
     const player = rooms[room][socket.id] ??= { digging: false };
     player.cadets = copyCadets(data);
-    player.x = data.x;
-    player.y = data.y;
+    if (room !== "drill-field" || !bevoController.stunned(socket.id)) {
+      player.x = data.x;
+      player.y = data.y;
+    }
     player.direction = data.direction;
     player.sniffing = data.sniffing === true && !player.digging;
     socket.data.roomId = room;
     socket.join(room);
+    if (room === "drill-field") socket.emit("bevo_state", bevoController.snapshot());
     broadcastRoom(room);
   });
   
   socket.on('update_position', (data) => {
     const room = socket.data.roomId;
-    if (!validRoom(room) || !validPosition(data) || !validCadets(data.cadets, room)) return;
+    if (!validRoom(room) || !validPosition(data) || !validCadets(data.cadets, room) || !validDrillPosition(data, room)) return;
     const player = rooms[room][socket.id];
     if (!player) return;
     player.cadets = copyCadets(data);
-    player.x = data.x;
-    player.y = data.y;
+    if (room !== "drill-field" || !bevoController.stunned(socket.id)) {
+      player.x = data.x;
+      player.y = data.y;
+    }
     player.direction = data.direction;
     player.sniffing = data.sniffing === true && !player.digging;
     broadcastRoom(room);
@@ -98,10 +130,20 @@ io.on('connection', (socket) => {
     socket.broadcast.to(room).emit("chomp", {x: data.x, y: data.y});
   });
 
+  socket.on("bevo_summon", (data) => {
+    if (socket.data.roomId !== "drill-field" || !bevoController.summon(socket.id, data?.encounterId)) return;
+    for (const player of Object.values(rooms["drill-field"])) { player.digging = false; player.sniffing = false; }
+    broadcastRoom("drill-field");
+  });
+  socket.on("bevo_bite", (data) => {
+    if (socket.data.roomId === "drill-field") bevoController.bite(socket.id, data?.encounterId);
+  });
+
   socket.on("sniffing", (data) => {
     const room = socket.data.roomId;
     if (!validRoom(room) || !rooms[room][socket.id] || !validCoordinates(data)
         || typeof data.active !== "boolean") return;
+    if (room === "drill-field" && bevoController.active() && data.active) return;
     rooms[room][socket.id].digging = data.active;
     if (data.active) rooms[room][socket.id].sniffing = false;
     broadcastRoom(room);
@@ -131,7 +173,7 @@ app.get('/greetings', (req, res) => {
 });
 
 app.get('/data', (req, res) => {
-    res.json({rooms: rooms});
+    res.json({rooms: rooms, bevo: bevo});
 })
 
 // Start the server and listen for incoming requests
@@ -140,7 +182,7 @@ if (require.main === module) server.listen(PORT, "0.0.0.0", () => {
 });
 
 // Import without binding a port for protocol tests; CLI startup is unchanged.
-module.exports = { app, server, io, rooms };
+module.exports = { app, server, io, rooms, bevo, bevoController };
 
 //normally we do app.listen(), however app.listen creates the server and runs it. however we already created
 //a server for websockets. if we do app.listen(), it won't run that server and will instead create and

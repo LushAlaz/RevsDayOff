@@ -1,4 +1,6 @@
 import { validCadets } from "./cadet-state.js";
+import { createBevoClient } from "./bevo-state.js";
+import { validKnockback } from "./knockback.js";
 const DIRECTIONS = new Set(["up", "down", "left", "right"]);
 
 export function validPosition(value, bounds) {
@@ -8,12 +10,15 @@ export function validPosition(value, bounds) {
 }
 
 /** Adapter for socket-keyed current-room snapshots. Time is seconds. */
-export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp = () => {}, onFound = () => {} }) {
+export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp = () => {}, onFound = () => {},
+    onBevoState = () => {}, onBevoHit = () => {}, onForcedMovement = () => {} }) {
     const records = new Map();
     let lastSent = null;
     let lastSentAt = -Infinity;
     let disposed = false;
     let digging = false;
+    const boss = createBevoClient({ socket, mapId, now, onState: onBevoState,
+        onHit: onBevoHit });
 
     function sendDigging() {
         const { x, y } = getLocal();
@@ -21,6 +26,9 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
     }
 
     function send() {
+        // Rendered intermediate positions must not overwrite server movement,
+        // including when a delayed hit arrives after the server's stun ended.
+        if (boss.stunned) return;
         const value = getLocal();
         socket.emit("update_position", value);
         lastSent = { ...value };
@@ -36,14 +44,26 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
     function disconnected() {
         records.clear();
         lastSent = null;
+        boss.clear();
+        onForcedMovement(null);
     }
     function received(data) {
         if (!socket.connected || !data?.room || typeof data.room !== "object" || Array.isArray(data.room)) return;
         const latest = new Map();
         for (const [id, row] of Object.entries(data.room)) {
-            if (id === socket.id
-                || !validPosition(row, bounds) || !DIRECTIONS.has(row.direction)) continue;
+            if (!validPosition(row, bounds) || !DIRECTIONS.has(row.direction)) continue;
+            const knockback = mapId === "drill-field" && Number.isFinite(data.serverNow)
+                && validKnockback(row.knockback) && row.knockback.encounterId === boss.state?.encounterId
+                ? row.knockback : null;
+            if (id === socket.id) {
+                if (knockback) {
+                    boss.syncKnockback(knockback, data.serverNow);
+                    onForcedMovement(knockback, data.serverNow);
+                }
+                continue;
+            }
             latest.set(id, { x: row.x, y: row.y, direction: row.direction, active: true,
+                knockback, serverNow: data.serverNow,
                 cadets: validCadets(row.cadets, bounds) ? row.cadets : [],
                 digging: row.digging === true, sniffing: row.sniffing === true && row.digging !== true });
         }
@@ -64,6 +84,7 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
 
     return {
         records,
+        boss,
         setDigging(active) {
             if (disposed || typeof active !== "boolean" || digging === active) return;
             digging = active;
@@ -90,11 +111,14 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, onChomp =
             if (!disposed && socket.connected) {
                 const { x, y } = getLocal();
                 socket.emit("chomp", { x, y });
+                boss.bite();
             }
         },
         dispose() {
             if (disposed) return;
             disposed = true;
+            boss.dispose();
+            onForcedMovement(null);
             for (const [event, handler] of Object.entries(handlers)) socket.off(event, handler);
             socket.disconnect();
             records.clear();

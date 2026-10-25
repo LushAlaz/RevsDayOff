@@ -22,6 +22,10 @@ export function addPlayer({
     function moveAxis(axis, velocity) {
         const before = player.pos[axis];
         player.move(axis === "x" ? velocity : 0, axis === "y" ? velocity : 0);
+        resolveAxis(axis, before, velocity);
+    }
+
+    function resolveAxis(axis, before, velocity) {
         const other = axis === "x" ? "y" : "x";
         const halfSize = (axis === "x" ? player.width : player.height) / 2;
         const otherHalf = (axis === "x" ? player.height : player.width) / 2;
@@ -52,6 +56,15 @@ export function addPlayer({
             ? (field.top + field.bottom) / 2
             : Math.max(field.top + halfHeight, Math.min(field.bottom - halfHeight, player.pos.y));
     }
+
+    player.applyForcedPosition = (position) => {
+        const beforeX = player.pos.x, beforeY = player.pos.y;
+        player.pos.x = position.x;
+        resolveAxis("x", beforeX, position.x - beforeX);
+        player.pos.y = position.y;
+        resolveAxis("y", beforeY, position.y - beforeY);
+        keepInsideField();
+    };
 
     player.onUpdate(() => {
         const movement = getMovementState();

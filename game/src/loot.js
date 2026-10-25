@@ -123,6 +123,15 @@ export function createLootController({ spots, inventory, random = Math.random, o
             if (this.phase === "challenge") { this.finish(false, "cancelled"); return true; }
             return this.phase === "result";
         },
+        suspend() {
+            if (this.phase === "challenge") this.finish(false, "cancelled");
+            this.phase = "exploration";
+            this.result = null;
+            this.active = null;
+            this.sniffing = false;
+            this.hint = "";
+            this.releaseRequired = true;
+        },
     };
     return state;
 }
