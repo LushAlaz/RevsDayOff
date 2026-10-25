@@ -5,15 +5,19 @@ const KEY = "revsdayoff.coins";
 let moduleId = 0;
 const freshSession = () => import(`../src/session.js?storage-test=${moduleId++}`);
 
-test("coin session storage", async (t) => {
-    const original = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
+test("coin local storage", async (t) => {
+    const legacy = Object.getOwnPropertyDescriptor(globalThis, "sessionStorage");
+    Object.defineProperty(globalThis, "sessionStorage", { configurable: true, value: { getItem: () => null } });
+    const original = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
     t.after(() => {
-        if (original) Object.defineProperty(globalThis, "sessionStorage", original);
+        if (legacy) Object.defineProperty(globalThis, "sessionStorage", legacy);
         else delete globalThis.sessionStorage;
+        if (original) Object.defineProperty(globalThis, "localStorage", original);
+        else delete globalThis.localStorage;
     });
     function storage(saved) {
         const values = new Map(saved == null ? [] : [[KEY, saved]]);
-        Object.defineProperty(globalThis, "sessionStorage", {
+        Object.defineProperty(globalThis, "localStorage", {
             configurable: true,
             value: {
                 getItem: (key) => values.get(key) ?? null,
@@ -77,11 +81,11 @@ test("coin session storage", async (t) => {
     });
 
     await t.test("unavailable or blocked storage does not prevent play", async () => {
-        delete globalThis.sessionStorage;
+        delete globalThis.localStorage;
         const missing = await freshSession();
         missing.session.coins = 20;
         assert.equal(missing.session.coins, 20);
-        Object.defineProperty(globalThis, "sessionStorage", {
+        Object.defineProperty(globalThis, "localStorage", {
             configurable: true,
             get() { throw new Error("Storage blocked"); },
         });
@@ -92,7 +96,7 @@ test("coin session storage", async (t) => {
     });
 
     await t.test("read and write failures fall back to in-memory coins", async () => {
-        Object.defineProperty(globalThis, "sessionStorage", {
+        Object.defineProperty(globalThis, "localStorage", {
             configurable: true,
             value: {
                 getItem() { throw new Error("Read failed"); },
@@ -105,5 +109,46 @@ test("coin session storage", async (t) => {
         sellOne("ring");
         assert.equal(session.coins, 150);
         assert.deepEqual(session.inventory, []);
+    });
+
+    await t.test("migrates a legacy tab balance and restores it after the tab storage is gone", async () => {
+        const saved = storage(null);
+        const legacyValues = new Map([[KEY, "125"]]);
+        Object.defineProperty(globalThis, "sessionStorage", {
+            configurable: true,
+            value: {
+                getItem: (key) => legacyValues.get(key) ?? null,
+                removeItem: (key) => legacyValues.delete(key),
+            },
+        });
+        assert.equal((await freshSession()).session.coins, 125);
+        assert.equal(saved.get(KEY), "125");
+        assert.equal(legacyValues.has(KEY), false);
+        delete globalThis.sessionStorage;
+        assert.equal((await freshSession()).session.coins, 125);
+    });
+
+    await t.test("existing local balance including zero takes precedence over old tab data", async () => {
+        Object.defineProperty(globalThis, "sessionStorage", {
+            configurable: true, value: { getItem: () => "999" },
+        });
+        for (const [value, expected] of [["0", 0], ["40", 40], ["invalid", 0]]) {
+            storage(value);
+            assert.equal((await freshSession()).session.coins, expected);
+        }
+    });
+
+    await t.test("failed migration does not delete the legacy balance", async () => {
+        let removed = false;
+        Object.defineProperty(globalThis, "sessionStorage", {
+            configurable: true,
+            value: { getItem: () => "75", removeItem() { removed = true; } },
+        });
+        Object.defineProperty(globalThis, "localStorage", {
+            configurable: true,
+            value: { getItem: () => null, setItem() { throw new Error("Full"); } },
+        });
+        assert.equal((await freshSession()).session.coins, 75);
+        assert.equal(removed, false);
     });
 });

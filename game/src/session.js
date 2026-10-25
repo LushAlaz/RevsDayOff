@@ -50,14 +50,24 @@ const inventory = new Proxy(restoreBag(), {
 let introPlayed = readLocal(INTRO_STORAGE_KEY) === "true";
 
 function restoreCoins() {
+    let saved = readLocal(COINS_STORAGE_KEY);
+    // Preserve balances from the previous session-storage implementation.
+    const migrate = saved === null;
     try {
-        const saved = globalThis.sessionStorage?.getItem(COINS_STORAGE_KEY);
-        if (saved == null || !/^\d+$/.test(saved)) return 0;
-        const value = Number(saved);
-        return Number.isSafeInteger(value) && value >= 0 ? value : 0;
-    } catch {
-        return 0;
+        if (migrate) saved = globalThis.sessionStorage?.getItem(COINS_STORAGE_KEY);
+    } catch { /* legacy storage may be blocked */ }
+    if (saved == null || !/^\d+$/.test(saved)) return 0;
+    const value = Number(saved);
+    if (!Number.isSafeInteger(value) || value < 0) return 0;
+    if (migrate) {
+        writeLocal(COINS_STORAGE_KEY, String(value));
+        if (readLocal(COINS_STORAGE_KEY) === String(value)) {
+            try {
+                globalThis.sessionStorage?.removeItem(COINS_STORAGE_KEY);
+            } catch { /* the local balance is already saved */ }
+        }
     }
+    return value;
 }
 
 let coins = restoreCoins();
@@ -71,11 +81,7 @@ export const session = {
     get coins() { return coins; },
     set coins(value) {
         coins = value;
-        try {
-            globalThis.sessionStorage?.setItem(COINS_STORAGE_KEY, String(value));
-        } catch {
-            // storage messing up, keep the current balance
-        }
+        writeLocal(COINS_STORAGE_KEY, String(value));
     },
     mapId: "kyle-field",
 };
