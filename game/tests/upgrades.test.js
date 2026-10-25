@@ -14,6 +14,27 @@ const { RULES, TOOTHBRUSH_MULTIPLIER: SERVER_MULTIPLIER, createBevoState, create
     createRequire(import.meta.url)("../../express/bevo.js");
 const wallet = (coins, upgrades = []) => ({ inventory: [], coins, upgrades: [...upgrades] });
 
+test("fresh sessions support level-entry upgrade checks before Play", () => {
+    assert.ok(Array.isArray(session.upgrades));
+    assert.equal(playerSpeed(), BASE_SPEED);
+    assert.deepEqual(rarityWeights(), Object.fromEntries(Object.entries(RARITIES).map(([name, rarity]) => [name, rarity.weight])));
+    assert.equal(hasUpgrade("crown"), false);
+});
+
+test("older states without an upgrade array can explore and buy an upgrade", () => {
+    for (const upgrades of [undefined, null, "redbull"]) {
+        const state = { inventory: [], coins: 60, upgrades };
+        assert.equal(hasUpgrade("redbull", state), false);
+        assert.equal(playerSpeed(state), BASE_SPEED);
+        assert.equal(rarityWeights(state).Common, RARITIES.Common.weight);
+        assert.ok(createUpgradeShop(state).rows.every((row) => !row.owned));
+        assert.deepEqual(buyUpgrade("redbull", state), { ok: true });
+        assert.equal(state.coins, 0);
+        assert.deepEqual(state.upgrades, ["redbull"]);
+        assert.equal(playerSpeed(state), RED_BULL_SPEED);
+    }
+});
+
 test("the shop sells the four requested upgrades, the crown being the expensive one", () => {
     assert.deepEqual(UPGRADES.map((upgrade) => upgrade.id), ["redbull", "clover", "toothbrush", "crown"]);
     const crown = UPGRADES.find((upgrade) => upgrade.id === "crown");

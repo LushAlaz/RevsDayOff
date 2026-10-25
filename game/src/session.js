@@ -73,6 +73,7 @@ function restoreCoins() {
 let coins = restoreCoins();
 export const session = {
     inventory,
+    upgrades: [],
     get introPlayed() { return introPlayed; },
     set introPlayed(value) {
         introPlayed = Boolean(value);
@@ -87,6 +88,7 @@ export const session = {
 };
 
 export function startNewGame() {
+    session.upgrades.length = 0;
     session.mapId = "kyle-field";
 }
 

@@ -1,5 +1,5 @@
 // Upgrades sold at the Good Bull shop. Each is bought once per game and resets with a new Play,
-// like coins. Prices and effects all live here so they're easy to tune.
+// Prices and effects all live here so they're easy to tune.
 // For scale: clearing one map at normal luck earns roughly 220 coins.
 import { session } from "./session.js";
 import { RARITIES } from "./items.js";
@@ -25,7 +25,7 @@ export function isAtUpgradeStand(position) {
 }
 
 export function hasUpgrade(id, state = session) {
-    return state.upgrades.includes(id);
+    return Array.isArray(state.upgrades) && state.upgrades.includes(id);
 }
 
 // Returns { ok: true } or { ok: false, reason } where reason is "owned", "coins" or "unknown".
@@ -34,6 +34,7 @@ export function buyUpgrade(id, state = session) {
     if (!upgrade) return { ok: false, reason: "unknown" };
     if (hasUpgrade(id, state)) return { ok: false, reason: "owned" };
     if (state.coins < upgrade.price) return { ok: false, reason: "coins" };
+    if (!Array.isArray(state.upgrades)) state.upgrades = [];
     state.coins -= upgrade.price;
     state.upgrades.push(id);
     return { ok: true };
