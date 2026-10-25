@@ -14,7 +14,7 @@ export const UPGRADES = [
 export const BASE_SPEED = 300;
 export const RED_BULL_SPEED = 375;
 // Rarity weights out of 100 with the clover (normal weights are in items.js).
-export const CLOVER_WEIGHTS = { Common: 45, Rare: 30, Epic: 17, Legendary: 8 };
+export const CLOVER_WEIGHTS = { Common: 35, Rare: 30, Epic: 20, Legendary: 15 };
 // Must match TOOTHBRUSH_MULTIPLIER in express/bevo.js, which applies it.
 export const TOOTHBRUSH_MULTIPLIER = 2;
 

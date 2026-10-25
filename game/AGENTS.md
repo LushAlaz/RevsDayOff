@@ -103,4 +103,3 @@ npm.cmd run dev -- --host 127.0.0.1
 - Browser-check visual changes and scene interactions. Existing development-only fixtures are `/tests/loot-preview.html`, `/tests/selling-preview.html`, and `/tests/maps-preview.html`.
 - Keep fixtures aligned with production catalog/scene APIs. Their seeded inventories and controls must stay outside the production entry point.
 - Run `git diff --check` and confirm the changed files remain within the authorized scope. Do not edit generated `dist/` bundles or `node_modules/` as implementation source.
-- Update `README.md` when controls, map flow, prices, assets, or gameplay behavior change.
