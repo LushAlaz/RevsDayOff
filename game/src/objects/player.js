@@ -85,7 +85,9 @@ export function addPlayer({
             }
             // move() applies delta time; normalization keeps diagonal speed equal.
             // Resolve axes separately to slide along walls instead of sticking to them.
-            const currentSpeed = movement.sniffing ? speed / 2 : speed;
+            // speed may be a function so upgrades (the Red Bull) apply the moment they're bought
+            const baseSpeed = typeof speed === "function" ? speed() : speed;
+            const currentSpeed = movement.sniffing ? baseSpeed / 2 : baseSpeed;
             moveAxis("x", x / length * currentSpeed);
             moveAxis("y", y / length * currentSpeed);
         } else if (walking) {

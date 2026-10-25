@@ -5,6 +5,8 @@ import { addSniffingEffect } from "./sniffing-ui.js";
 import { createKnockbackPlayback } from "./knockback.js";
 import { addNameTag } from "./objects/nametag.js";
 import { profile, hasProfile } from "./profile.js";
+import { hasUpgrade } from "./upgrades.js";
+import { addCrown } from "./objects/upgrade-art.js";
 
 export function addMultiplayer(player, map, { getSniffing = () => false, getCadets = () => [],
     onBevoState = () => {}, onBevoHit = () => {} } = {}) {
@@ -16,7 +18,11 @@ export function addMultiplayer(player, map, { getSniffing = () => false, getCade
     const localKnockback = createKnockbackPlayback(() => performance.now() / 1000);
     const presence = createPresence({
         socket, mapId: map.id, bounds: map.bounds, now: () => performance.now() / 1000,
-        getProfile: () => (hasProfile() ? { username: profile.username, displayName: profile.displayName } : {}),
+        // upgrades are only bought in the shop, which is a separate scene, so sending them on joining is enough
+        getProfile: () => ({
+            ...(hasProfile() ? { username: profile.username, displayName: profile.displayName } : {}),
+            crown: hasUpgrade("crown"), toothbrush: hasUpgrade("toothbrush"),
+        }),
         getLocal: () => ({ x: player.pos.x, y: player.pos.y, direction: player.facing, sniffing: getSniffing(), cadets: getCadets() }),
         onBevoState,
         onForcedMovement: (motion, serverNow) => {
@@ -95,7 +101,8 @@ export function addMultiplayer(player, map, { getSniffing = () => false, getCade
                     outline(2, rgb(50, 35, 22)), z(4),
                 ]);
                 const nameTag = addNameTag(actor, record.displayName ?? "");
-                view = { actor, from: { x: record.x, y: record.y }, nameTag,
+                const crown = addCrown(actor);
+                view = { actor, from: { x: record.x, y: record.y }, nameTag, crown,
                     target: { x: record.x, y: record.y }, started: time(), movedAt: -Infinity, diggingLabel,
                     knockback: createKnockbackPlayback(() => performance.now() / 1000) };
                 views.set(id, view);
@@ -104,6 +111,7 @@ export function addMultiplayer(player, map, { getSniffing = () => false, getCade
             view.diggingLabel.hidden = !record.digging;
             // players without a name (older clients) just show no tag
             if (view.nameTag.text !== (record.displayName ?? "")) view.nameTag.text = record.displayName ?? "";
+            view.crown.hidden = !record.crown;
             if (view.knockback.motion?.encounterId !== presence.boss.state?.encounterId) view.knockback.clear();
             if (record.knockback) view.knockback.accept(record.knockback, record.serverNow, actor.pos);
             const forced = view.knockback.sample();

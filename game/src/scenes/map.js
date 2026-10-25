@@ -8,6 +8,8 @@ import { addHud } from "../objects/hud.js";
 import { addDucks } from "../objects/ducks.js";
 import { addNameTag } from "../objects/nametag.js";
 import { profile, hasProfile } from "../profile.js";
+import { hasUpgrade, playerSpeed, rarityWeights } from "../upgrades.js";
+import { addCrown } from "../objects/upgrade-art.js";
 import { MAPS, getMap, cycleMap } from "../maps.js";
 import { drawLandscape } from "../landscapes.js";
 import { addCadet, cadetSpawnPoint, enableBite } from "../objects/cadet.js";
@@ -168,7 +170,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     const cadets = new Map();
     let nextCadetId = 0;
     const loot = createLootController({
-        spots: generateLoot({ bounds: map.bounds, obstacles: map.obstacles, entrance: SHOP.entrance }),
+        spots: generateLoot({ bounds: map.bounds, obstacles: map.obstacles, entrance: SHOP.entrance, weights: rarityWeights() }),
         inventory: session.inventory,
         onDigStart: () => multiplayer.setDigging(true),
         onDigFinish: ({ success, position }) => {
@@ -211,6 +213,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         bounds: map.bounds,
         obstacles: map.obstacles,
         inventory: session.inventory,
+        speed: playerSpeed(),
         getMovementState: () => ({
             locked: loot.phase === "challenge" || hud.isBagOpen() || stunned(),
             sniffing: loot.phase === "exploration" && sniffing(),
@@ -218,6 +221,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     });
     player.onUpdate(() => loot.step(dt(), sniffing(), player.pos));
     if (hasProfile()) addNameTag(player, profile.displayName, { mine: true });
+    if (hasUpgrade("crown")) addCrown(player);
     multiplayer = addMultiplayer(player, map, {
         onBevoState: (state) => {
             if (isBevoActive(state)) { loot.suspend(); hud.closeBag(); }

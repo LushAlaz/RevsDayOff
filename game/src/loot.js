@@ -1,22 +1,23 @@
 import { ITEMS, RARITIES } from "./items.js";
 
-export function rollRarity(random = Math.random) {
+// weights: chance out of 100 per rarity; the Four-Leaf Clover upgrade passes better ones.
+export function rollRarity(random = Math.random, weights = null) {
     let roll = random() * 100;
     for (const [name, rarity] of Object.entries(RARITIES)) {
-        roll -= rarity.weight;
+        roll -= weights?.[name] ?? rarity.weight;
         if (roll < 0) return name;
     }
     return "Legendary";
 }
 
-export function generateLoot({ bounds, obstacle, obstacles = obstacle ? [obstacle] : [], entrance, count = 12, random = Math.random }) {
+export function generateLoot({ bounds, obstacle, obstacles = obstacle ? [obstacle] : [], entrance, count = 12, random = Math.random, weights = null }) {
     const spots = [];
     function place(position) {
         if (obstacles.some((solid) => position.x > solid.left - 64 && position.x < solid.right + 64
             && position.y > solid.top - 64 && position.y < solid.bottom + 64)) return;
         if (Math.hypot(position.x - entrance.x, position.y - entrance.y) < 112) return;
         if (spots.some((spot) => Math.hypot(position.x - spot.position.x, position.y - spot.position.y) < 140)) return;
-        const rarity = rollRarity(random);
+        const rarity = rollRarity(random, weights);
         const candidates = ITEMS.filter((item) => item.rarity === rarity);
         spots.push({ id: spots.length, position, item: candidates[Math.floor(random() * candidates.length)],
             rarity, collected: false });

@@ -13,7 +13,18 @@ Built with JavaScript, [KAPLAY](https://kaplayjs.com/), and Vite.
 5. Visit the **Good Bull shop** in the top-left corner of any map. Press **Space** at the entrance, then approach the counter and press **Space** again to sell your finds.
 6. Keep exploring, collecting, and selling. Press **Esc** while exploring to choose another map.
 
-Your coins and bag sit in the bottom-right corner; click the bag or press **B** to see what you have dug up. Your bag and coins carry over between maps and shop visits. Starting a new game or reloading the page resets your progress. Saving, buying upgrades, online multiplayer, and the leaderboard are not implemented yet.
+Your coins and bag sit in the bottom-right corner; click the bag or press **B** to see what you have dug up. Your bag and coins carry over between maps and shop visits. Starting a new game or reloading the page resets your progress. Saving and the leaderboard are not implemented yet.
+
+### Upgrades
+
+The **Upgrades** stand in the top-right of the Good Bull shop sells one-time upgrades. Walk up to it and press **Space**. Upgrades last until you start a new game.
+
+| Upgrade | Price | Effect |
+| --- | ---: | --- |
+| Red Bull | 60 | Rev runs 25% faster |
+| Four-Leaf Clover | 150 | Rarer loot shows up more often (Legendary 3% → 8%) |
+| Toothbrush | 80 | Double chomp damage on Bevo |
+| Royal Crown | 1000 | A crown on Rev's head that other players can see |
 
 ## Run locally
 

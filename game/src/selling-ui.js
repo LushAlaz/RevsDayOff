@@ -1,7 +1,8 @@
 import { session } from "./session.js";
 import { isAtCounter } from "./selling.js";
 
-export function addSellingUI(player, selling) {
+// otherMenuOpen: another full-screen menu (the upgrade stand) is showing, so tuck the corner balance away
+export function addSellingUI(player, selling, { otherMenuOpen = () => false } = {}) {
     const prompt = add([
         rect(320, 40, { radius: 6 }), pos(center().x, height() - 28),
         anchor("center"), fixed(), z(20), color(50, 16, 24),
@@ -68,7 +69,7 @@ export function addSellingUI(player, selling) {
     player.onUpdate(() => {
         prompt.hidden = selling.open || !isAtCounter(player.pos);
         balance.text = `Coins: ${session.coins}`;
-        balance.hidden = selling.open;
+        balance.hidden = selling.open || otherMenuOpen();
         root.hidden = !selling.open;
         if (!selling.open) return;
         const items = selling.rows;

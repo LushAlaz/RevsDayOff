@@ -11,7 +11,8 @@ export function validPosition(value, bounds) {
 }
 
 /** Adapter for socket-keyed current-room snapshots. Time is seconds. */
-// getProfile: { username, displayName } sent once when joining a room, so others can show the name.
+// getProfile: { username, displayName, crown, toothbrush } sent once when joining a room,
+// so others can show the name and crown, and the server knows about the toothbrush.
 export function createPresence({ socket, mapId, bounds, getLocal, now, getProfile = () => ({}), onChomp = () => {}, onFound = () => {},
     onBevoState = () => {}, onBevoHit = () => {}, onForcedMovement = () => {} }) {
     const records = new Map();
@@ -69,7 +70,8 @@ export function createPresence({ socket, mapId, bounds, getLocal, now, getProfil
                 cadets: validCadets(row.cadets, bounds) ? row.cadets : [],
                 digging: row.digging === true, sniffing: row.sniffing === true && row.digging !== true,
                 username: validUsername(row.username) ? row.username : null,
-                displayName: validDisplayName(row.displayName) ? row.displayName : null });
+                displayName: validDisplayName(row.displayName) ? row.displayName : null,
+                crown: row.crown === true });
         }
         for (const id of records.keys()) if (!latest.has(id)) records.delete(id);
         for (const [id, value] of latest) {

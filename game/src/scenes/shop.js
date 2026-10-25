@@ -7,6 +7,9 @@ import { getMap, getShopReturn } from "../maps.js";
 import { addBubble, addPrompt } from "../objects/bubble.js";
 import { addNameTag } from "../objects/nametag.js";
 import { profile, hasProfile } from "../profile.js";
+import { UPGRADES, UPGRADE_STAND, createUpgradeShop, hasUpgrade, playerSpeed } from "../upgrades.js";
+import { addUpgradeUI } from "../upgrades-ui.js";
+import { addCrown, drawUpgradeIcon } from "../objects/upgrade-art.js";
 
 export const BARREL_LABEL = "Marcel Reed's Interception Juice";
 const BARREL_READ_RANGE = 90;
@@ -27,6 +30,21 @@ function addBarrel(box) {
     block(14, 28, w - 28, 4, [244, 237, 214]);
 }
 
+// A table in the top-right corner with the four upgrades on display.
+function addUpgradeStand(box) {
+    const w = box.right - box.left;
+    add([rect(w, box.bottom - box.top), pos(box.left, box.top), color(111, 73, 43), outline(3, rgb(29, 36, 48)), z(-1)]);
+    add([rect(w - 8, 6), pos(box.left + 4, box.top + 4), color(163, 113, 64), z(-1)]);
+    add([text("UPGRADES", { font: "pixel", size: 8 }), pos(box.left + w / 2, box.top - 6), anchor("center")]);
+    add([pos(box.left, box.top), z(0), {
+        draw() {
+            UPGRADES.forEach((upgrade, index) => {
+                drawUpgradeIcon(upgrade.id, { pos: vec2(20 + index * 36, 28), anchor: "center" }, 2);
+            });
+        },
+    }]);
+}
+
 scene("shop", ({ mapId = session.mapId } = {}) => {
     const origin = getMap(mapId);
     setCamPos(center());
@@ -40,6 +58,8 @@ scene("shop", ({ mapId = session.mapId } = {}) => {
     // easter egg in the empty bottom-left corner, clear of the counter and the exit
     const barrel = { left: 104, top: 396, right: 152, bottom: 456 };
     const selling = createSellingController();
+    const upgrades = createUpgradeShop();
+    const menuOpen = () => selling.open || upgrades.open;
 
     function furnishing(box, tint) {
         add([
@@ -72,14 +92,20 @@ scene("shop", ({ mapId = session.mapId } = {}) => {
     add([rect(32, 72), pos(848, 364), color(68, 102, 80)]);
     add([text("EXIT", { font: "pixel", size: 8 }), pos(864, 350), anchor("center")]);
     addBarrel(barrel);
+    addUpgradeStand(UPGRADE_STAND);
     const player = addPlayer({
-        spawn: { x: 760, y: 400 }, bounds, obstacles: [counter, ...shelves, barrel], inventory: session.inventory,
-        getMovementState: () => ({ locked: selling.open, sniffing: false }),
+        spawn: { x: 760, y: 400 }, bounds, obstacles: [counter, ...shelves, barrel, UPGRADE_STAND], inventory: session.inventory,
+        speed: () => playerSpeed(),
+        getMovementState: () => ({ locked: menuOpen(), sniffing: false }),
     });
-    addSellingUI(player, selling);
+    addSellingUI(player, selling, { otherMenuOpen: () => upgrades.open });
+    addUpgradeUI(player, upgrades, { canOpen: () => !selling.open });
     if (hasProfile()) addNameTag(player, profile.displayName, { mine: true });
+    // shows up the moment the crown is bought
+    const crown = addCrown(player);
+    crown.onUpdate(() => { crown.hidden = !hasUpgrade("crown"); });
     const barrelTop = vec2((barrel.left + barrel.right) / 2, barrel.top + 12);
-    const canRead = () => !selling.open && player.pos.dist(barrelTop) <= BARREL_READ_RANGE;
+    const canRead = () => !menuOpen() && player.pos.dist(barrelTop) <= BARREL_READ_RANGE;
     const readPrompt = addPrompt("Space: Read the barrel");
     let label = null;
     readPrompt.onUpdate(() => { readPrompt.hidden = !!label || !canRead(); });
@@ -93,10 +119,11 @@ scene("shop", ({ mapId = session.mapId } = {}) => {
     addSceneEntrance(player, {
         point: { x: 856, y: 400 }, label: `Space: Return to ${origin.name}`, target: "explore",
         args: getShopReturn(origin.id),
-        canInteract: () => !selling.open,
+        canInteract: () => !menuOpen(),
     });
     onKeyPress("escape", () => {
         if (selling.open) selling.close();
+        else if (upgrades.open) upgrades.close();
         else go("explore", getShopReturn(origin.id));
     });
 });

@@ -108,6 +108,9 @@ io.on('connection', (socket) => {
       delete player.username;
       delete player.displayName;
     }
+    // upgrades from the Good Bull shop: the crown is shown to the room, the toothbrush doubles Bevo bites (bevo.js)
+    player.crown = data.crown === true;
+    player.toothbrush = data.toothbrush === true;
     socket.data.roomId = room;
     socket.join(room);
     if (room === "drill-field") socket.emit("bevo_state", bevoController.snapshot());

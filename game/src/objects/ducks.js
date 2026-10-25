@@ -7,6 +7,7 @@
 // ---------------------------------------------------------------
 
 import { addBubble, addPrompt } from "./bubble.js";
+import { pixelSprite, drawPixelSprite } from "./pixel-art.js";
 
 export const DUCK_PIXEL = 3;          // screen pixels per art pixel (matches the cadets)
 export const FOLLOW_RANGE = 240;      // Rev this close to the pond gets followed
@@ -75,29 +76,10 @@ export function canReachDucks(dog, ducks, range = TALK_RANGE) {
     return ducks.some((duck) => Math.hypot(duck.x - dog.x, duck.y - dog.y) <= range);
 }
 
-// Each pixel map is painted once into a small sprite, shared by every duck that uses it.
-const duckSprites = new Map();
-function duckSprite(art, wing) {
-    const key = art.join("") + wing;
-    if (!duckSprites.has(key)) {
-        const canvas = document.createElement("canvas");
-        canvas.width = art[0].length * DUCK_PIXEL;
-        canvas.height = art.length * DUCK_PIXEL;
-        const ctx = canvas.getContext("2d");
-        art.forEach((row, ry) => [...row].forEach((cell, rx) => {
-            if (cell === ".") return;
-            ctx.fillStyle = `rgb(${(cell === "d" && wing ? wing : COLORS[cell]).join(",")})`;
-            ctx.fillRect(rx * DUCK_PIXEL, ry * DUCK_PIXEL, DUCK_PIXEL, DUCK_PIXEL);
-        }));
-        duckSprites.set(key, loadSprite(null, canvas));
-    }
-    return duckSprites.get(key);
-}
-
 function addDuck(art, start, wing) {
     const width = art[0].length * DUCK_PIXEL;
     const height = art.length * DUCK_PIXEL;
-    const look = duckSprite(art, wing);
+    const look = pixelSprite(art, wing ? { ...COLORS, d: wing } : COLORS, DUCK_PIXEL);
     return add([
         pos(start.x, start.y),
         z(-80), // above the water, below Rev, trees and benches
@@ -109,7 +91,7 @@ function addDuck(art, start, wing) {
                 const lift = Math.round(Math.sin(time() * 4 + this.bob)) * DUCK_PIXEL / 3;
                 // a pale ripple under the body
                 drawRect({ pos: vec2(-width / 2 - 3, height / 2 - 4), width: width + 6, height: 4, color: rgb(150, 205, 215), opacity: 0.7 });
-                if (look.data) drawSprite({ sprite: look.data, pos: vec2(0, lift), anchor: "center", flipX: this.facing < 0 });
+                drawPixelSprite(look, { pos: vec2(0, lift), anchor: "center", flipX: this.facing < 0 });
             },
         },
     ]);

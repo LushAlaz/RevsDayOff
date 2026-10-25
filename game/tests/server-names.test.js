@@ -57,4 +57,12 @@ test("display names travel through the server to the rest of the room", { timeou
     ashi.socket.emit("update_position", { x: 420, y: 300, direction: "right" });
     await waitFor(() => plain.presence.records.get(ashi.socket.id)?.x === 420);
     assert.equal(plain.presence.records.get(ashi.socket.id).displayName, "Ashi T");
+
+    // upgrades ride along on joining: the crown reaches the room, the toothbrush stays on the server
+    const royal = await join({ x: 900, y: 300, direction: "down" }, { crown: true, toothbrush: true });
+    await waitFor(() => plain.presence.records.has(royal.socket.id));
+    assert.equal(plain.presence.records.get(royal.socket.id).crown, true);
+    assert.equal(plain.presence.records.get(ashi.socket.id).crown, false);
+    assert.equal(stored[royal.socket.id].toothbrush, true);
+    assert.equal(stored[ashi.socket.id].toothbrush, false);
 });

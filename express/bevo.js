@@ -2,6 +2,8 @@ const geometry = require("./world-geometry.json");
 const bounds = geometry.drillField.bounds;
 const obstacles = [geometry.shopObstacle, ...geometry.drillField.trees.map((tree) => tree.obstacle)];
 const RULES = Object.freeze(require("./bevo-rules.json"));
+// A Toothbrush upgrade (game/src/upgrades.js) multiplies a player's bite damage on Bevo.
+const TOOTHBRUSH_MULTIPLIER = 2;
 const active = (boss) => !["dormant", "defeated"].includes(boss.phase);
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const unit = (x, y) => { const length = Math.hypot(x, y); return length ? { x: x / length, y: y / length } : { x: 0, y: 1 }; };
@@ -126,7 +128,8 @@ function createBevoController(bevo, { getPlayers, now, onState = () => {}, onHit
     // Out-of-range bites still consume the server cooldown.
     bites.set(id, now() + RULES.biteCooldown);
     if (distance(player, bevo) > RULES.biteRange) return false;
-    bevo.hp = Math.max(0, bevo.hp - RULES.biteDamage);
+    const damage = RULES.biteDamage * (player.toothbrush === true ? TOOTHBRUSH_MULTIPLIER : 1);
+    bevo.hp = Math.max(0, bevo.hp - damage);
     if (!bevo.hp) {
       bevo.target = null; bevo.resummonAt = now() + RULES.respawnTime;
       phase("defeated", RULES.respawnTime);
@@ -199,4 +202,4 @@ function createBevoController(bevo, { getPlayers, now, onState = () => {}, onHit
   }
   return { snapshot, summon, bite, step, reset, stunned, active: () => active(bevo) };
 }
-module.exports = { RULES, createBevoState, createBevoController, move, clear, knockbackPosition };
+module.exports = { RULES, TOOTHBRUSH_MULTIPLIER, createBevoState, createBevoController, move, clear, knockbackPosition };
