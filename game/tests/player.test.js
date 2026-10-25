@@ -14,6 +14,7 @@ beforeEach(() => {
     globalThis.pos = (x, y) => ({ pos: { x, y } });
     globalThis.sprite = (name, options) => ({ sprite: name, flipX: false, ...options });
     globalThis.anchor = () => ({});
+    globalThis.z = () => ({});
     globalThis.isKeyDown = (key) => keys.has(key);
     globalThis.add = (components) => Object.assign({
         onUpdate(callback) { this.update = callback; },

@@ -17,6 +17,7 @@ This is a top-down Texas A&M game starring Reveille. Players explore Aggie locat
 - `src/maps.js` owns map definitions and travel helpers; `src/landscapes.js` draws park/drill terrain; `src/field.js` draws Kyle Field.
 - `src/scenes/map.js` registers the campus selector (`mapSelect`) and shared playable scene (`explore`). Do not confuse the selector with the old single-map gameplay scene.
 - `src/objects/player.js` owns movement and obstacle resolution.
+- `src/presence.js` consumes current Socket.IO room snapshots keyed by socket ID; `src/multiplayer.js` renders remote players in outdoor scenes. Use `VITE_NETWORK_SERVER_URL` (default `http://localhost:3001`) and disconnect in the shop. Show peers immediately and remove IDs missing from snapshots; do not use history counts or expiry timers. The user explicitly authorized Express fixes for the snapshot migration; future unrelated Express edits still require expanded scope.
 - `src/loot.js` owns generation and challenge state; `src/loot-ui.js` renders its effects and HUD.
 - `src/items.js` is the canonical item/rarity catalog. `src/session.js` owns inventory, coins, reset behavior, and sales.
 - `src/shop.js` owns exterior geometry and entrance interaction. The interior is `src/scenes/shop.js`; selling logic/UI live in `src/selling.js` and `src/selling-ui.js`.

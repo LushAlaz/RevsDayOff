@@ -31,7 +31,7 @@ test("midfield logo loads from a local asset", () => {
 
 test("side animations never cross into the opposite-facing frames", () => {
     let loaded;
-    globalThis.loadSprite = (name, path, options) => { loaded = { name, path, options }; };
+    globalThis.loadSprite = (name, path, options) => { if (name === "reveille") loaded = { name, path, options }; };
     loadSprites();
     assert.equal(loaded.name, "reveille");
     assert.equal(loaded.path, "sprites/Reveille.png");

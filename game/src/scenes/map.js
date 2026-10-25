@@ -7,6 +7,7 @@ import { session, stealItem } from "../session.js";
 import { MAPS, getMap, cycleMap } from "../maps.js";
 import { drawLandscape } from "../landscapes.js";
 import { addCadet, cadetSpawnPoint, enableBite } from "../objects/cadet.js";
+import { addMultiplayer } from "../multiplayer.js";
 
 scene("mapSelect", () => {
     setCamPos(center());
@@ -125,7 +126,8 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         getMovementState: () => ({ locked: loot.phase === "challenge", sniffing: loot.phase === "exploration" && isKeyDown("x") }),
     });
     player.onUpdate(() => loot.step(dt(), isKeyDown("x"), player.pos));
-    enableBite(player, { canBite: () => loot.phase !== "challenge" });
+    const multiplayer = addMultiplayer(player, map);
+    enableBite(player, { canBite: () => loot.phase !== "challenge", onBite: () => multiplayer.bite() });
     onKeyPress("space", () => loot.stopSpinner());
     addLootUI(player, loot, session.inventory, map.name);
     addFieldShop(player, () => loot.canInteract && !isKeyDown("x"), map.id);

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cadetSpawnPoint, findBiteTarget, CADET_SPAWN_MARGIN, BITE_RANGE } from "../src/objects/cadet.js";
+import { cadetSpawnPoint, findBiteTarget, enableBite, CADET_SPAWN_MARGIN, BITE_RANGE } from "../src/objects/cadet.js";
 import { createLootController, triggersCadet } from "../src/loot.js";
 import { ITEMS } from "../src/items.js";
 import { MAPS } from "../src/maps.js";
@@ -94,4 +94,21 @@ test("an empty bag has nothing to steal", () => {
     const state = { inventory: [], coins: 0 };
     assert.equal(stealItem(state), null);
     assert.deepEqual(state.inventory, []);
+});
+
+test("bite callback fires for accepted chomps only, respecting cooldown and challenge lock", () => {
+    let press, clock = 0, allowed = true, bites = 0;
+    globalThis.onKeyPress = (_key, callback) => { press = callback; };
+    globalThis.time = () => clock;
+    globalThis.get = () => [];
+    for (const name of ["add", "text", "pos", "anchor", "color", "outline", "rgb", "opacity", "move", "vec2", "lifespan", "z"]) {
+        globalThis[name] = () => ({});
+    }
+    enableBite({ pos: { add: () => ({}) } }, { canBite: () => allowed, onBite: () => bites++ });
+    press(); press();
+    assert.equal(bites, 1);
+    clock = 0.5; allowed = false; press();
+    assert.equal(bites, 1);
+    allowed = true; press();
+    assert.equal(bites, 2);
 });
