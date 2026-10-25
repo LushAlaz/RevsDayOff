@@ -28,7 +28,6 @@ export function drawLandscape(map) {
         for (let y = p.top + 42; y < p.bottom - 28; y += 48) {
             for (let x = p.left + 40; x < p.right - 40; x += 74) patch(x, y, 22, 3, [119, 187, 199], -91);
         }
-        add([text("AGGIE PARK", { font: "pixel", size: 16 }), pos(850, 330), anchor("center"), color(223, 232, 192), z(-90)]);
         // Flower beds stay decorative, leaving the lawn fully connected.
         for (const [x, y] of [[750, 600], [900, 385], [1600, 800]]) {
             patch(x, y, 88, 28, [81, 98, 53]);
