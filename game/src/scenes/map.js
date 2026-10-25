@@ -76,8 +76,17 @@ scene("mapSelect", () => {
     patch(652, 106, 276, 374, [44, 48, 51], 8);
     const name = label("", 790, 146, 16, 240);
     const size = label("", 790, 199, 8);
-    const description = add([text("", { font: "pixel", size: 8, width: 224, align: "center", lineSpacing: 8 }), pos(790, 251), anchor("center"), color(cream), z(999)]);
-    label("12 hidden loot spots", 790, 324, 8);
+    const description = add([text("", { font: "pixel", size: 8, width: 224, align: "center", lineSpacing: 8 }), pos(790, 235), anchor("center"), color(cream), z(999)]);
+    label("CONTROLS", 790, 278, 8);
+    const controls = [
+        "WASD / Arrows: move",
+        "Hold X: sniff for loot",
+        "Space: dig / enter Good Bull",
+        "B: open bag",
+        "E: bite cadets",
+        "Esc: cancel / return to maps",
+    ];
+    controls.forEach((control, index) => label(control, 790, 302 + index * 16, 8));
     const enter = add([rect(224, 48, { radius: 6 }), pos(678, 402), area(), color(maroon), z(999)]);
     enter.add([text("Explore / Enter", { font: "pixel", size: 8 }), pos(112, 24), anchor("center"), color(cream), z(999)]);
     enter.onClick(travel);
@@ -162,7 +171,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     });
     enableBite(player, { canBite: () => loot.phase !== "challenge", onBite: () => multiplayer.bite() });
     onKeyPress("space", () => loot.stopSpinner());
-    addLootUI(player, loot, map.name);
+    addLootUI(player, loot);
     addFieldShop(player, () => loot.canInteract && !isKeyDown("x") && !hud.isBagOpen(), map.id);
     followPlayer(player, map.bounds);
 });
