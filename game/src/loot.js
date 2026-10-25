@@ -48,6 +48,10 @@ export function isTimingHit(angle, target, arc) {
     return Math.abs(difference) <= arc / 2 + 1e-9;
 }
 
+// How long the result popup stays up. Finds clear quickly; misses stay long enough to read the cadet warning.
+export const FOUND_RESULT_SECONDS = 1.2;
+export const MISS_RESULT_SECONDS = 2;
+
 // A miss or timeout makes noise and calls a cadet over; cancelling with Esc doesn't.
 export function triggersCadet(result) {
     return !result.success && result.reason !== "cancelled";
@@ -70,7 +74,8 @@ export function createLootController({ spots, inventory, random = Math.random, o
             }
             if (this.phase === "result") {
                 this.elapsed += seconds;
-                if (this.elapsed >= 2) { this.phase = "exploration"; this.result = null; }
+                const hold = this.result.success ? FOUND_RESULT_SECONDS : MISS_RESULT_SECONDS;
+                if (this.elapsed >= hold) { this.phase = "exploration"; this.result = null; }
                 return;
             }
             this.sniffing = heldX;

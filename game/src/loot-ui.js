@@ -69,9 +69,13 @@ export function addLootUI(player, loot, mapName = "Kyle Field") {
                         label("Found!", cx, cy - 100, 16);
                         drawSprite({ sprite: result.item.sprite, pos: vec2(cx, cy - 10), width: 88, height: 88, anchor: "center" });
                         label(`${result.rarity} ${result.item.name}`, cx, cy + 65, 16, rgb(...RARITIES[result.rarity].color));
+                    } else if (triggersCadet(result)) {
+                        label(result.reason === "timeout" ? "Time's up!" : "Missed!", cx, cy - 60, 24);
+                        label("A cadet is after you!", cx, cy, 16, rgb(255, 120, 110));
+                        label("Press E to bite him away.", cx, cy + 40, 8);
                     } else {
-                        label(result.reason === "cancelled" ? "Attempt cancelled" : result.reason === "timeout" ? "Time's up!" : "Missed!", cx, cy - 25, 28);
-                        label("Release X and sniff again.", cx, cy + 30, 20);
+                        label("Attempt cancelled", cx, cy - 25, 24);
+                        label("Release X and sniff again.", cx, cy + 30, 16);
                     }
                     label("Release X before your next sniff", cx, cy + 108, 8);
                 }
