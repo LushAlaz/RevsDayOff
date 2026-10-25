@@ -20,7 +20,18 @@ scene("mapSelect", () => {
     const cream = rgb(244, 237, 214);
     const maroon = rgb(80, 0, 0);
     function patch(x, y, w, h, tint, radius = 0) {
-        return add([rect(w, h, { radius }), pos(x, y), color(...tint)]);
+        const snap = (n) => Math.round(n / 4) * 4;
+        x = snap(x); y = snap(y);
+        w = Math.max(4, snap(w)); h = Math.max(4, snap(h));
+        const block = (dx, dy, bw, bh) => add([
+            rect(bw, bh), pos(x + dx, y + dy), color(...tint),
+        ]);
+        if (!radius) return block(0, 0, w, h);
+        // Cut square pixels out of corners instead of drawing smooth curves.
+        const cut = Math.min(8, Math.floor(w / 12) * 4, Math.floor(h / 12) * 4);
+        block(cut, 0, w - cut * 2, 4);
+        block(0, 4, w, h - 8);
+        return block(cut, h - 4, w - cut * 2, 4);
     }
     function label(value, x, y, size = 8, textWidth) {
         return add([text(value, { font: "pixel", size, width: textWidth, align: "center", lineSpacing: 8 }), pos(x, y), anchor("center"), color(cream)]);
@@ -32,16 +43,35 @@ scene("mapSelect", () => {
         setCursor("default");
         go("explore", { mapId: selected.id });
     }
+    // Quiet checker texture and inset frames echo a handheld RPG menu.
+    for (let y = 0; y < 540; y += 16) {
+        for (let x = (y / 16) % 2 ? 0 : 16; x < 960; x += 32) {
+            patch(x, y, 16, 16, [34, 40, 39]);
+        }
+    }
+    patch(28, 102, 608, 382, [14, 25, 27], 8);
     label("EXPLORE AGGIELAND", 480, 38, 24);
     patch(32, 106, 600, 374, [122, 151, 101], 8);
+    for (let y = 120; y < 464; y += 24) {
+        for (let x = 44; x < 612; x += 24) {
+            const offset = ((x + y) % 5) * 4;
+            patch(x + offset, y, 8, 4, [137, 162, 108]);
+            patch(x + offset + 4, y - 4, 4, 4, [149, 174, 118]);
+        }
+    }
     patch(48, 258, 568, 30, [139, 142, 133]);
     patch(48, 267, 568, 12, [202, 196, 172]);
     patch(408, 118, 28, 346, [139, 142, 133]);
     patch(417, 118, 10, 346, [202, 196, 172]);
+    for (let x = 56; x < 608; x += 32) patch(x, 272, 12, 4, [239, 223, 178]);
+    for (let y = 128; y < 456; y += 32) patch(420, y, 4, 12, [239, 223, 178]);
     for (const [x, y, w, h] of [[65, 133, 65, 48], [146, 127, 52, 66], [72, 204, 105, 33], [462, 134, 62, 56], [541, 145, 54, 78]]) {
         patch(x + 3, y + 4, w, h, [99, 109, 87]);
         patch(x, y, w, h, [197, 177, 143]);
         patch(x + 5, y + 5, w - 10, h - 10, [217, 201, 171]);
+        for (let roofX = x + 12; roofX < x + w - 8; roofX += 16) {
+            patch(roofX, y + 12, 4, h - 24, [183, 158, 125]);
+        }
     }
     patch(216, 126, 182, 100, [190, 184, 151], 4);
     patch(226, 136, 162, 80, [90, 139, 76]);
@@ -57,12 +87,16 @@ scene("mapSelect", () => {
     patch(466, 308, 9, 96, [211, 197, 155]);
     patch(466, 395, 120, 9, [211, 197, 155]);
     patch(543, 339, 43, 39, [72, 154, 179], 8);
+    patch(552, 348, 20, 4, [125, 198, 202]);
+    patch(560, 364, 16, 4, [125, 198, 202]);
     for (const [x, y] of [[477, 335], [520, 387], [590, 321], [565, 388], [86, 424], [373, 416]]) {
         patch(x, y, 7, 12, [99, 73, 45]);
         patch(x - 7, y - 10, 22, 20, [45, 93, 53], 4);
+        patch(x - 4, y - 8, 12, 8, [72, 125, 64]);
+        patch(x - 4, y - 8, 4, 4, [109, 153, 77]);
     }
     const pins = MAPS.map((map) => {
-        const pin = add([circle(17), pos(map.pin.x, map.pin.y), anchor("center"), area(), color(maroon), outline(3, cream), z(2)]);
+        const pin = add([rect(32, 32), pos(map.pin.x, map.pin.y), anchor("center"), area(), color(maroon), outline(4, cream), z(2)]);
         pin.add([text(String(MAPS.indexOf(map) + 1), { font: "pixel", size: 8 }), anchor("center"), color(cream)]);
         const caption = label(map.name, map.pin.x, map.id === "drill-field" ? 239 : 438, 8);
         caption.use(area());
@@ -73,7 +107,11 @@ scene("mapSelect", () => {
         }
         return { map, pin };
     });
+    patch(648, 102, 284, 382, [14, 25, 27], 8);
     patch(652, 106, 276, 374, [44, 48, 51], 8);
+    patch(660, 114, 260, 4, [91, 103, 96]);
+    patch(660, 118, 4, 354, [67, 79, 74]);
+    patch(676, 260, 228, 4, [67, 79, 74]);
     const name = label("", 790, 146, 16, 240);
     const size = label("", 790, 199, 8);
     const description = add([text("", { font: "pixel", size: 8, width: 224, align: "center", lineSpacing: 8 }), pos(790, 235), anchor("center"), color(cream), z(999)]);
@@ -87,7 +125,8 @@ scene("mapSelect", () => {
         "Esc: cancel / return to maps",
     ];
     controls.forEach((control, index) => label(control, 790, 302 + index * 16, 8));
-    const enter = add([rect(224, 48, { radius: 6 }), pos(678, 402), area(), color(maroon), z(999)]);
+    const enter = add([rect(224, 48), pos(678, 402), area(), color(maroon), outline(4, cream), z(999)]);
+    enter.add([rect(216, 4), pos(4, 4), color(137, 66, 62)]);
     enter.add([text("Explore / Enter", { font: "pixel", size: 8 }), pos(112, 24), anchor("center"), color(cream), z(999)]);
     enter.onClick(travel);
     enter.onHover(() => setCursor("pointer"));

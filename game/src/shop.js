@@ -37,10 +37,6 @@ export function addFieldShop(player, canInteract = () => true, mapId = "kyle-fie
         sprite("good-bull-shop", { width: SHOP.width, height: SHOP.height }),
         pos(SHOP.position.x, SHOP.position.y), z(1),
     ]);
-    add([
-        text("Shop", { font: "pixel", size: 8 }), pos(104, 18), anchor("center"),
-        z(2), outline(3, rgb(30, 25, 25)),
-    ]);
     addSceneEntrance(player, {
         point: SHOP.entrance, label: "Space: Enter Shop", target: "shop", args: { mapId }, canInteract,
     });
