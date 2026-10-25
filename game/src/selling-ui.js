@@ -6,39 +6,39 @@ export function addSellingUI(player, selling) {
         rect(320, 40, { radius: 6 }), pos(center().x, height() - 28),
         anchor("center"), fixed(), z(20), color(50, 16, 24),
     ]);
-    prompt.add([text("Space: Sell items", { size: 20 }), anchor("center")]);
+    prompt.add([text("Space: Sell items", { font: "pixel", size: 8 }), anchor("center")]);
     const balance = add([
-        text("", { size: 18 }), pos(850, 48), anchor("right"), fixed(), z(10),
+        text("", { font: "pixel", size: 8 }), pos(850, 48), anchor("right"), fixed(), z(10),
         color(255, 215, 100),
     ]);
     const root = add([
         rect(760, 450, { radius: 10 }), pos(100, 45), fixed(), z(200), color(27, 30, 40),
     ]);
     root.hidden = true;
-    root.add([text("Sell your finds", { size: 28 }), pos(20, 28), anchor("left")]);
+    root.add([text("Sell your finds", { font: "pixel", size: 16 }), pos(20, 28), anchor("left")]);
     const menuBalance = root.add([
-        text("", { size: 20 }), pos(700, 28), anchor("right"), color(255, 215, 100),
+        text("", { font: "pixel", size: 8 }), pos(700, 28), anchor("right"), color(255, 215, 100),
     ]);
     const closeButton = root.add([
-        text("X", { size: 22 }), pos(733, 28), anchor("center"), area(),
+        text("X", { font: "pixel", size: 16 }), pos(733, 28), anchor("center"), area(),
     ]);
     closeButton.onClick(() => { if (selling.open) selling.close(); });
-    root.add([text("Item / rarity", { size: 16 }), pos(30, 72), anchor("left")]);
-    root.add([text("Qty", { size: 16 }), pos(560, 72), anchor("right")]);
-    root.add([text("Coins each", { size: 16 }), pos(718, 72), anchor("right")]);
+    root.add([text("Item / rarity", { font: "pixel", size: 8 }), pos(30, 72), anchor("left")]);
+    root.add([text("Qty", { font: "pixel", size: 8 }), pos(560, 72), anchor("right")]);
+    root.add([text("Coins each", { font: "pixel", size: 8 }), pos(718, 72), anchor("right")]);
 
     const rows = Array.from({ length: 7 }, (_, index) => {
         const row = root.add([
             rect(720, 32, { radius: 4 }), pos(20, 92 + index * 35), area(), color(43, 48, 62),
         ]);
-        const name = row.add([text("", { size: 16 }), pos(12, 16), anchor("left")]);
-        const quantity = row.add([text("", { size: 16 }), pos(540, 16), anchor("right")]);
-        const price = row.add([text("", { size: 16 }), pos(698, 16), anchor("right")]);
+        const name = row.add([text("", { font: "pixel", size: 8 }), pos(12, 16), anchor("left")]);
+        const quantity = row.add([text("", { font: "pixel", size: 8 }), pos(540, 16), anchor("right")]);
+        const price = row.add([text("", { font: "pixel", size: 8 }), pos(698, 16), anchor("right")]);
         row.onClick(() => { if (selling.open && row.itemId) selling.select(row.itemId); });
         return { row, name, quantity, price };
     });
     const empty = root.add([
-        text("Your bag is empty. Sniff around Kyle Field to find loot!", { size: 19, width: 660 }),
+        text("Your bag is empty. Sniff around Kyle Field to find loot!", { font: "pixel", size: 8, width: 656, lineSpacing: 8 }),
         pos(380, 192), anchor("center"),
     ]);
 
@@ -46,15 +46,15 @@ export function addSellingUI(player, selling) {
         const background = root.add([
             rect(w, 40, { radius: 5 }), pos(x, 348), area(), color(80, 0, 0),
         ]);
-        const label = background.add([text("", { size: 18 }), pos(w / 2, 20), anchor("center")]);
+        const label = background.add([text("", { font: "pixel", size: 8 }), pos(w / 2, 20), anchor("center")]);
         background.onClick(() => { if (selling.open) action(); });
         return { background, label };
     }
     const one = button(20, 330, () => selling.sellSelected());
     const all = button(370, 370, () => selling.sellEverything());
-    const message = root.add([text("", { size: 16, width: 720 }), pos(20, 410), anchor("left")]);
+    const message = root.add([text("", { font: "pixel", size: 8, width: 720, lineSpacing: 8 }), pos(20, 410), anchor("left")]);
     root.add([
-        text("Up/Down: select   Enter: sell one   A: sell all   Esc: close", { size: 14 }),
+        text("Up/Down: select   Enter: sell one   A: sell all   Esc: close", { font: "pixel", size: 8 }),
         pos(380, 437), anchor("center"),
     ]);
 

@@ -4,7 +4,7 @@ export const SHOP = {
     height: 180,
     entrance: { x: 104, y: 204 },
     returnSpawn: { x: 104, y: 252 },
-    obstacle: { left: 40, top: 104, right: 168, bottom: 204 },
+    obstacle: { left: 40, top: 48, right: 168, bottom: 148 },
     radius: 80,
 };
 
@@ -17,7 +17,7 @@ export function addSceneEntrance(player, { point, label, target, args, radius = 
         rect(360, 40, { radius: 6 }), pos(center().x, height() - 28),
         anchor("center"), fixed(), z(20), color(50, 16, 24),
     ]);
-    prompt.add([text(label, { size: 20 }), anchor("center")]);
+    prompt.add([text(label, { font: "pixel", size: 8 }), anchor("center")]);
     prompt.hidden = true;
     let transitioning = false;
     player.onUpdate(() => {
@@ -37,7 +37,7 @@ export function addFieldShop(player, canInteract = () => true, mapId = "kyle-fie
         pos(SHOP.position.x, SHOP.position.y), z(1),
     ]);
     add([
-        text("Shop", { size: 18 }), pos(104, 18), anchor("center"),
+        text("Shop", { font: "pixel", size: 8 }), pos(104, 18), anchor("center"),
         z(2), outline(3, rgb(30, 25, 25)),
     ]);
     addSceneEntrance(player, {
