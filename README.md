@@ -4,6 +4,17 @@ A pixel art browser game starring Reveille. Explore Texas A&M landmarks, sniff o
 
 Built with JavaScript, [KAPLAY](https://kaplayjs.com/), and Vite.
 
+## How to play
+
+1. Select **Play** and read the intro, or press **Esc** to skip it.
+2. Choose **Kyle Field**, **Aggie Park**, or **Simpson Drill Field** on the campus map.
+3. Explore as Reveille. Hold **X** to sniff for buried items and follow the scent hints. Sniffing slows your movement.
+4. When you find a spot, a timing challenge begins. Press **Space** when the pointer reaches the green target to collect the item. Rarer treasures are harder to collect and worth more coins.
+5. Visit the **Good Bull shop** in the top-left corner of any map. Press **Space** at the entrance, then approach the counter and press **Space** again to sell your finds.
+6. Keep exploring, collecting, and selling. Press **Esc** while exploring to choose another map.
+
+Your bag and coins carry over between maps and shop visits. Starting a new game or reloading the page resets your progress. Saving, buying upgrades, online multiplayer, and the leaderboard are not implemented yet.
+
 ## Run locally
 
 Install a recent Node.js LTS release and npm, then run from the repository root:
@@ -22,11 +33,12 @@ Open the local URL printed in the terminal (normally `http://localhost:3000`). S
 | --- | --- |
 | Move | WASD or arrow keys |
 | Sniff for hidden loot | Hold X |
-| Dig / interact with the shop | Space |
+| Stop the treasure challenge pointer | Space |
+| Enter the shop / interact with the counter | Space |
 | Select a map | Click, or arrow keys and Enter |
+| Sell one selected item | Enter in the selling menu |
+| Sell everything in your bag | A in the selling menu |
 | Return / close a menu / cancel a challenge | Esc |
-
-Explore Kyle Field, Aggie Park, and Simpson Drill Field. Follow scent hints, complete timing challenges to collect loot, and sell items at the shop. Coins and inventory last for the current session; starting a new game or reloading resets them.
 
 ## Project structure
 
@@ -39,7 +51,7 @@ express/
   server.js        Express and Socket.IO backend scaffold
 ```
 
-The browser game runs independently of the backend. Online multiplayer and the leaderboard are not implemented yet.
+The browser game runs independently of the backend; you only need to start `game/` to play.
 
 ## Build and check
 
@@ -50,5 +62,3 @@ npm run build                 # Build into dist/
 npm run preview               # Serve the production build locally
 node --test tests/*.test.js    # Run automated checks
 ```
-
-See [game/README.md](game/README.md) for detailed gameplay and development notes.
