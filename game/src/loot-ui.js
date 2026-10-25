@@ -1,5 +1,6 @@
 import { RARITIES } from "./items.js";
 import { session } from "./session.js";
+import { triggersCadet } from "./loot.js";
 
 export function addLootUI(player, loot, inventory, mapName = "Kyle Field") {
     const sniffLabel = add([
@@ -35,7 +36,7 @@ export function addLootUI(player, loot, inventory, mapName = "Kyle Field") {
                 const cx = width() / 2;
                 const cy = height() / 2;
                 drawRect({ pos: vec2(10, 10), width: width() - 20, height: 58, color: panel, opacity: 0.94, radius: 6 });
-                label(`${mapName}  |  Hold X: sniff  |  WASD / Arrows: move  |  Esc: maps`, 24, 24, 15, white, "left");
+                label(`${mapName}  |  Hold X: sniff  |  E: bite  |  WASD / Arrows: move  |  Esc: maps`, 24, 24, 15, white, "left");
                 const last = inventory.at(-1);
                 label(`Coins: ${session.coins}  |  Bag: ${inventory.length}${last ? `  |  Last: ${last.rarity} ${last.name}` : ""}`, 24, 49, 15, white, "left");
 
@@ -73,6 +74,7 @@ export function addLootUI(player, loot, inventory, mapName = "Kyle Field") {
                     } else {
                         label(result.reason === "cancelled" ? "Attempt cancelled" : result.reason === "timeout" ? "Time's up!" : "Missed!", cx, cy - 25, 28);
                         label("Release X and sniff again.", cx, cy + 30, 20);
+                        if (triggersCadet(result)) label("A cadet heard that! Press E to bite.", cx, cy + 66, 18, rgb(255, 207, 82));
                     }
                     label("Release X before your next sniff", cx, cy + 108, 15);
                 }

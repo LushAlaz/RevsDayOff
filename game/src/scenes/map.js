@@ -3,9 +3,10 @@ import { followPlayer } from "../camera.js";
 import { SHOP, addFieldShop } from "../shop.js";
 import { generateLoot, createLootController } from "../loot.js";
 import { addLootUI } from "../loot-ui.js";
-import { session } from "../session.js";
+import { session, stealItem } from "../session.js";
 import { MAPS, getMap, cycleMap } from "../maps.js";
 import { drawLandscape } from "../landscapes.js";
+import { addCadet, cadetSpawnPoint, enableBite } from "../objects/cadet.js";
 
 scene("mapSelect", () => {
     setCamPos(center());
@@ -110,6 +111,15 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
     const loot = createLootController({
         spots: generateLoot({ bounds: map.bounds, obstacles: map.obstacles, entrance: SHOP.entrance }),
         inventory: session.inventory,
+        // each failed dig calls a cadet, who freezes while Rev is in a challenge
+        // and takes an item from her bag if he reaches her
+        onFail: () => {
+            const spawn = cadetSpawnPoint(player.pos, map.bounds);
+            addCadet(vec2(spawn.x, spawn.y), player, {
+                canMove: () => loot.phase !== "challenge",
+                steal: () => stealItem(),
+            });
+        },
     });
     const player = addPlayer({
         spawn: spawn ?? map.spawn,
@@ -119,6 +129,7 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
         getMovementState: () => ({ locked: loot.phase === "challenge", sniffing: loot.phase === "exploration" && isKeyDown("x") }),
     });
     player.onUpdate(() => loot.step(dt(), isKeyDown("x"), player.pos));
+    enableBite(player, { canBite: () => loot.phase !== "challenge" });
     onKeyPress("space", () => loot.stopSpinner());
     addLootUI(player, loot, session.inventory, map.name);
     addFieldShop(player, () => loot.canInteract && !isKeyDown("x"), map.id);

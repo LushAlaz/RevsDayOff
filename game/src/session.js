@@ -8,6 +8,13 @@ export function startNewGame() {
     session.mapId = "kyle-field";
 }
 
+// A cadet who catches Rev takes one random item from her bag. Returns it, or null if the bag is empty.
+export function stealItem(state = session, random = Math.random) {
+    if (!state.inventory.length) return null;
+    const [item] = state.inventory.splice(Math.floor(random() * state.inventory.length), 1);
+    return item;
+}
+
 export function getInventoryRows(state = session) {
     return ITEMS.map((item) => {
         const quantity = state.inventory.filter((entry) => entry.id === item.id).length;

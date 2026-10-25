@@ -65,6 +65,7 @@ This is a top-down Texas A&M game starring Reveille. Players explore Aggie locat
 - The circular challenge uses a six-second limit and a fresh Space press to stop the pointer in the highlighted arc. Rotation uses elapsed time; hit detection handles angular wraparound and includes boundaries.
 - Success awards once and removes the spot. Misses, timeouts, and cancellation retain the same item. Require releasing X after an attempt before retrying. Esc cancels a challenge before navigating away.
 - Gate shop interactions during sniffing/challenges/results so Space cannot both stop a spinner and enter the shop.
+- A miss or timeout (not a cancel) spawns a senior cadet via the loot controller's `onFail`; `triggersCadet()` in `src/loot.js` is the single rule. `src/objects/cadet.js` owns spawning, marching, and the E bite. Cadets freeze during challenges. On contact a cadet takes one random bag item via `stealItem()` in `src/session.js` (never coins) and leaves.
 - Inventory and coins persist across maps and shop visits, but reset when Play starts a new game or the browser reloads. No persistent save system or buying is currently implemented.
 - Roll rarity first, then select uniformly among items in that tier. Item rarity is fixed, not rolled independently of item type.
 

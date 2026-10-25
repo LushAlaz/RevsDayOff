@@ -48,7 +48,12 @@ export function isTimingHit(angle, target, arc) {
     return Math.abs(difference) <= arc / 2 + 1e-9;
 }
 
-export function createLootController({ spots, inventory, random = Math.random }) {
+// A miss or timeout makes noise and calls a cadet over; cancelling with Esc doesn't.
+export function triggersCadet(result) {
+    return !result.success && result.reason !== "cancelled";
+}
+
+export function createLootController({ spots, inventory, random = Math.random, onFail = () => {} }) {
     // Challenge difficulty and awards always follow the collectible's fixed rarity.
     for (const spot of spots) spot.rarity = spot.item.rarity;
     const state = {
@@ -100,6 +105,7 @@ export function createLootController({ spots, inventory, random = Math.random })
             this.elapsed = 0;
             this.releaseRequired = true;
             this.sniffing = false;
+            if (triggersCadet(this.result)) onFail(this.result);
         },
         stopSpinner() {
             if (this.phase !== "challenge") return;

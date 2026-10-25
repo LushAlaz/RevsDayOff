@@ -55,6 +55,21 @@ the spot. Release X after an attempt before sniffing again.
 | Epic | 12% | 240 degrees/second | 40 degrees |
 | Legendary | 3% | 300 degrees/second | 24 degrees |
 
+### Cadets and biting
+
+Missing the spinner or letting it time out makes noise: a senior cadet
+(`public/sprites/cadet-senior.png`) appears about 420 world pixels from Reveille,
+inside the map, and marches toward her at 120 pixels/second. Every failed attempt
+calls another cadet. Cancelling with **Esc** does not. Cadets freeze while a
+challenge is open and currently walk through terrain.
+
+Press **E** to bite. The nearest cadet within 80 pixels is defeated and fades
+out; there is a 0.4-second cooldown, and biting is disabled during a challenge.
+A cadet who reaches Reveille (within 32 pixels) takes one random item from her
+bag and leaves; with an empty bag he leaves empty-handed. Coins are never taken.
+Reveille outruns cadets (300 vs 120 pixels/second). Cadets are cleared when you
+leave the map.
+
 Rarity is rolled first, then an item is selected uniformly from that tier. Each
 item has one fixed rarity, which determines its timing challenge and sale price.
 The HUD shows coins, bag count, and the latest find. Inventory and coins survive
