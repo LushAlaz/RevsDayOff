@@ -1,8 +1,7 @@
 import { RARITIES } from "./items.js";
-import { session } from "./session.js";
 import { triggersCadet } from "./loot.js";
 
-export function addLootUI(player, loot, inventory, mapName = "Kyle Field") {
+export function addLootUI(player, loot, mapName = "Kyle Field") {
     const sniffLabel = add([
         text("Sniffing...", { font: "pixel", size: 8 }), pos(0, 0), anchor("center"),
         outline(3, rgb(25, 30, 25)), z(4),
@@ -35,10 +34,9 @@ export function addLootUI(player, loot, inventory, mapName = "Kyle Field") {
             draw() {
                 const cx = width() / 2;
                 const cy = height() / 2;
-                drawRect({ pos: vec2(10, 10), width: width() - 20, height: 58, color: panel, opacity: 0.94, radius: 6 });
-                label(`${mapName}  |  Hold X: sniff  |  WASD / Arrows: move  |  Esc: maps`, 24, 24, 15, white, "left");
-                const last = inventory.at(-1);
-                label(`Coins: ${session.coins}  |  Bag: ${inventory.length}${last ? `  |  Last: ${last.rarity} ${last.name}` : ""}`, 24, 49, 8, white, "left");
+                // coins and the bag live in the bottom-right HUD (objects/hud.js)
+                drawRect({ pos: vec2(10, 10), width: width() - 20, height: 38, color: panel, opacity: 0.94, radius: 6 });
+                label(`${mapName}  |  Hold X: sniff  |  WASD / Arrows: move  |  B: bag  |  Esc: maps`, 24, 22, 8, white, "left");
 
                 if (loot.phase === "exploration" && loot.sniffing) {
                     drawRect({ pos: vec2(cx - 210, 80), width: 420, height: 40, color: panel, radius: 6 });
@@ -71,9 +69,13 @@ export function addLootUI(player, loot, inventory, mapName = "Kyle Field") {
                         label("Found!", cx, cy - 100, 16);
                         drawSprite({ sprite: result.item.sprite, pos: vec2(cx, cy - 10), width: 88, height: 88, anchor: "center" });
                         label(`${result.rarity} ${result.item.name}`, cx, cy + 65, 16, rgb(...RARITIES[result.rarity].color));
+                    } else if (triggersCadet(result)) {
+                        label(result.reason === "timeout" ? "Time's up!" : "Missed!", cx, cy - 60, 24);
+                        label("A cadet is after you!", cx, cy, 16, rgb(255, 120, 110));
+                        label("Press E to bite him away.", cx, cy + 40, 8);
                     } else {
-                        label(result.reason === "cancelled" ? "Attempt cancelled" : result.reason === "timeout" ? "Time's up!" : "Missed!", cx, cy - 25, 28);
-                        label("Release X and sniff again.", cx, cy + 30, 20);
+                        label("Attempt cancelled", cx, cy - 25, 24);
+                        label("Release X and sniff again.", cx, cy + 30, 16);
                     }
                     label("Release X before your next sniff", cx, cy + 108, 8);
                 }

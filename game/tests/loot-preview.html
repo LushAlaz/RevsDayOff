@@ -29,7 +29,7 @@ scene("preview", (rarity = "Common") => {
     player.onUpdate(() => loot.step(dt(), isKeyDown("x"), player.pos));
     onKeyPress("space", () => loot.stopSpinner());
     onKeyPress("escape", () => loot.cancel());
-    addLootUI(player, loot, inventory);
+    addLootUI(player, loot);
 });
 for (const rarity of Object.keys(RARITIES)) {
     document.querySelector(`#${rarity.toLowerCase()}`).onclick = () => go("preview", rarity);
@@ -47,7 +47,7 @@ scene("reward-preview", () => {
     rewardLoot.step(0, true, position);
     rewardLoot.step(180 / RARITIES.Legendary.speed, true, position);
     rewardLoot.stopSpinner();
-    addLootUI(player, rewardLoot, inventory);
+    addLootUI(player, rewardLoot);
 });
 go("preview");
 </script>

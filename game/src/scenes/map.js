@@ -3,7 +3,8 @@ import { followPlayer } from "../camera.js";
 import { SHOP, addFieldShop } from "../shop.js";
 import { generateLoot, createLootController } from "../loot.js";
 import { addLootUI } from "../loot-ui.js";
-import { session, stealItem } from "../session.js";
+import { session, stealItem, getBagItems } from "../session.js";
+import { addHud } from "../objects/hud.js";
 import { MAPS, getMap, cycleMap } from "../maps.js";
 import { drawLandscape } from "../landscapes.js";
 import { addCadet, cadetSpawnPoint, enableBite } from "../objects/cadet.js";
@@ -118,19 +119,38 @@ scene("explore", ({ mapId = session.mapId, spawn } = {}) => {
             });
         },
     });
+    // Registered before the HUD's own Esc handler, so Esc with the bag open only closes the bag.
+    onKeyPress("escape", () => { if (!hud.isBagOpen() && !loot.cancel()) go("mapSelect"); });
+    const hud = addHud({
+        coins: session.coins,
+        items: getBagItems(),
+        canOpen: () => loot.phase !== "challenge",
+    });
+    // Mirror the session into the HUD: the coin counter counts up, and the bag refreshes when items are dug up or stolen.
+    let bagKey = JSON.stringify(getBagItems());
+    onUpdate(() => {
+        if (session.coins > hud.getCoins()) hud.addCoins(session.coins - hud.getCoins());
+        else if (session.coins < hud.getCoins()) hud.spendCoins(hud.getCoins() - session.coins);
+        const items = getBagItems();
+        const key = JSON.stringify(items);
+        if (key !== bagKey) { bagKey = key; hud.setItems(items); }
+    });
+    const sniffing = () => isKeyDown("x") && !hud.isBagOpen();
     const player = addPlayer({
         spawn: spawn ?? map.spawn,
         bounds: map.bounds,
         obstacles: map.obstacles,
         inventory: session.inventory,
-        getMovementState: () => ({ locked: loot.phase === "challenge", sniffing: loot.phase === "exploration" && isKeyDown("x") }),
+        getMovementState: () => ({
+            locked: loot.phase === "challenge" || hud.isBagOpen(),
+            sniffing: loot.phase === "exploration" && sniffing(),
+        }),
     });
     player.onUpdate(() => loot.step(dt(), isKeyDown("x"), player.pos));
     const multiplayer = addMultiplayer(player, map);
     enableBite(player, { canBite: () => loot.phase !== "challenge", onBite: () => multiplayer.bite() });
     onKeyPress("space", () => loot.stopSpinner());
-    addLootUI(player, loot, session.inventory, map.name);
-    addFieldShop(player, () => loot.canInteract && !isKeyDown("x"), map.id);
+    addLootUI(player, loot, map.name);
+    addFieldShop(player, () => loot.canInteract && !isKeyDown("x") && !hud.isBagOpen(), map.id);
     followPlayer(player, map.bounds);
-    onKeyPress("escape", () => { if (!loot.cancel()) go("mapSelect"); });
 });

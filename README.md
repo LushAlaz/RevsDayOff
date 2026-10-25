@@ -13,7 +13,7 @@ Built with JavaScript, [KAPLAY](https://kaplayjs.com/), and Vite.
 5. Visit the **Good Bull shop** in the top-left corner of any map. Press **Space** at the entrance, then approach the counter and press **Space** again to sell your finds.
 6. Keep exploring, collecting, and selling. Press **Esc** while exploring to choose another map.
 
-Your bag and coins carry over between maps and shop visits. Starting a new game or reloading the page resets your progress. Saving, buying upgrades, online multiplayer, and the leaderboard are not implemented yet.
+Your coins and bag sit in the bottom-right corner; click the bag or press **B** to see what you have dug up. Your bag and coins carry over between maps and shop visits. Starting a new game or reloading the page resets your progress. Saving, buying upgrades, online multiplayer, and the leaderboard are not implemented yet.
 
 ## Run locally
 
@@ -34,6 +34,7 @@ Open the local URL printed in the terminal (normally `http://localhost:3000`). S
 | Move | WASD or arrow keys |
 | Sniff for hidden loot | Hold X |
 | Stop the treasure challenge pointer | Space |
+| Open or close your bag | B, or click the bag icon |
 | Enter the shop / interact with the counter | Space |
 | Select a map | Click, or arrow keys and Enter |
 | Sell one selected item | Enter in the selling menu |

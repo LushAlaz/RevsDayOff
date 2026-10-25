@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ITEMS, RARITIES } from "../src/items.js";
-import { getInventoryRows, sellOne, sellAll, session, startNewGame } from "../src/session.js";
+import { getInventoryRows, getBagItems, sellOne, sellAll, session, startNewGame } from "../src/session.js";
 import { createSellingController, isAtCounter } from "../src/selling.js";
 
 test("catalog has exactly the requested fixed item rarities and sale values", () => {
@@ -109,4 +109,15 @@ test("counter interaction is restricted to the area below its front edge", () =>
     assert.equal(isAtCounter({ x: 159, y: 280 }), false);
     assert.equal(isAtCounter({ x: 400, y: 321 }), false);
     assert.equal(isAtCounter({ x: 856, y: 400 }), false);
+});
+
+test("HUD bag shows one slot per item type with its loaded sprite and count", () => {
+    const ring = ITEMS.find((item) => item.id === "ring");
+    const hat = ITEMS.find((item) => item.id === "hat");
+    const state = { inventory: [{ ...hat }, { ...ring }, { ...hat }], coins: 0 };
+    assert.deepEqual(getBagItems(state), [
+        { sprite: ring.sprite, name: ring.name, count: 1 },
+        { sprite: hat.sprite, name: hat.name, count: 2 },
+    ]);
+    assert.deepEqual(getBagItems({ inventory: [], coins: 0 }), []);
 });

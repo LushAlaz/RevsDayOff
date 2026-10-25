@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { generateLoot, distanceHint, rollRarity, isTimingHit, createLootController } from "../src/loot.js";
+import { generateLoot, distanceHint, rollRarity, isTimingHit, createLootController, FOUND_RESULT_SECONDS, MISS_RESULT_SECONDS } from "../src/loot.js";
 import { FIELD_LAYOUT } from "../src/field.js";
 import { SHOP } from "../src/shop.js";
 import { ITEMS, RARITIES } from "../src/items.js";
@@ -192,4 +192,19 @@ test("fresh field entries regenerate loot while the session bag persists until n
     const bag = session.inventory;
     startNewGame();
     assert.equal(bag.length, 0);
+});
+
+test("the found popup clears sooner than a miss, which stays up for the cadet warning", () => {
+    const hold = (hit) => {
+        const { controller, spot } = fixture();
+        controller.step(0, true, spot.position);
+        if (hit) controller.step(1.5, true, spot.position);
+        controller.stopSpinner();
+        assert.equal(controller.result.success, hit);
+        controller.step(FOUND_RESULT_SECONDS, false, spot.position);
+        return controller.phase;
+    };
+    assert.ok(FOUND_RESULT_SECONDS < MISS_RESULT_SECONDS);
+    assert.equal(hold(true), "exploration");
+    assert.equal(hold(false), "result");
 });

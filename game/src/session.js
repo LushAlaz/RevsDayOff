@@ -23,6 +23,11 @@ export function getInventoryRows(state = session) {
     }).filter((row) => row.quantity > 0);
 }
 
+// One HUD bag slot per item type, in catalog order.
+export function getBagItems(state = session) {
+    return getInventoryRows(state).map((row) => ({ sprite: row.sprite, name: row.name, count: row.quantity }));
+}
+
 export function sellOne(itemId, state = session) {
     const item = ITEMS.find((entry) => entry.id === itemId);
     const index = state.inventory.findIndex((entry) => entry.id === itemId);
