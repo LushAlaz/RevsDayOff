@@ -32,7 +32,6 @@ scene("shop", ({ mapId = session.mapId } = {}) => {
     for (let x = 80; x < 880; x += 80) {
         add([rect(2, 380), pos(x, 100), color(153, 126, 91), z(-99)]);
     }
-    add([text("GOOD BULL SHOP", { size: 34 }), pos(center().x, 48), anchor("center")]);
     for (const shelf of shelves) {
         furnishing(shelf, [56, 65, 79]);
         for (let x = shelf.left + 16; x < shelf.right - 12; x += 36) {
@@ -40,9 +39,14 @@ scene("shop", ({ mapId = session.mapId } = {}) => {
         }
     }
     furnishing(counter, [80, 0, 0]);
-    add([text("Howdy!", { size: 24 }), pos(400, 214), anchor("center")]);
+    add([text("MARCEL REED SUPERSTORE", { font: "pixel", size: 16 }), pos(400, 214), anchor("center")]);
+    add([
+        pos(340, 93),
+        scale(0.2),
+        sprite("marcel")
+    ])
     add([rect(32, 72), pos(848, 364), color(68, 102, 80)]);
-    add([text("EXIT", { size: 16 }), pos(864, 350), anchor("center")]);
+    add([text("EXIT", { font: "pixel", size: 8 }), pos(864, 350), anchor("center")]);
     const player = addPlayer({
         spawn: { x: 760, y: 400 }, bounds, obstacles: [counter, ...shelves], inventory: session.inventory,
         getMovementState: () => ({ locked: selling.open, sniffing: false }),
@@ -53,10 +57,6 @@ scene("shop", ({ mapId = session.mapId } = {}) => {
         args: getShopReturn(origin.id),
         canInteract: () => !selling.open,
     });
-    add([
-        text(`Move: WASD / Arrows    |    Esc: Return to ${origin.name}`, { size: 16 }),
-        pos(center().x, 78), anchor("center"),
-    ]);
     onKeyPress("escape", () => {
         if (selling.open) selling.close();
         else go("explore", getShopReturn(origin.id));

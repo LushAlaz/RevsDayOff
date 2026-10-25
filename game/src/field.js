@@ -41,7 +41,7 @@ export function drawField() {
     ]) {
         patch(x, top, field.endZoneWidth, height, maroon, -98);
         add([
-            text(label, { size: 48, font: "monospace" }),
+            text(label, { font: "pixel", size: 32 }),
             pos(x + field.endZoneWidth / 2, field.center.y),
             anchor("center"), rotate(rotation), color(white), z(-80),
         ]);
@@ -62,7 +62,7 @@ export function drawField() {
     for (const number of field.yardNumbers) {
         for (const [y, rotation] of [[top + 128, 180], [bottom - 128, 0]]) {
             add([
-                text(number.label.split("").join(" "), { size: 26, font: "monospace" }),
+                text(number.label.split("").join(" "), { font: "pixel", size: 16 }),
                 pos(number.x, y), anchor("center"), rotate(rotation), color(white), z(-85),
             ]);
         }

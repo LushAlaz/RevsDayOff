@@ -28,7 +28,7 @@ export function drawLandscape(map) {
         for (let y = p.top + 42; y < p.bottom - 28; y += 48) {
             for (let x = p.left + 40; x < p.right - 40; x += 74) patch(x, y, 22, 3, [119, 187, 199], -91);
         }
-        add([text("AGGIE PARK", { size: 28 }), pos(850, 330), anchor("center"), color(223, 232, 192), z(-90)]);
+        add([text("AGGIE PARK", { font: "pixel", size: 16 }), pos(850, 330), anchor("center"), color(223, 232, 192), z(-90)]);
         // Flower beds stay decorative, leaving the lawn fully connected.
         for (const [x, y] of [[750, 600], [900, 385], [1600, 800]]) {
             patch(x, y, 88, 28, [81, 98, 53]);
@@ -41,7 +41,7 @@ export function drawLandscape(map) {
         patch(32, 260, 28, h - 292, path);
         patch(w - 60, 32, 28, h - 64, path);
         patch(90, 240, 190, 28, path);
-        add([text("SIMPSON DRILL FIELD", { size: 24 }), pos(610, 110), anchor("center"), color(220, 232, 193), z(-90)]);
+        add([text("SIMPSON DRILL FIELD", { font: "pixel", size: 16 }), pos(610, 110), anchor("center"), color(220, 232, 193), z(-90)]);
         patch(540, 65, 3, 32, [215, 215, 203], -90);
         patch(543, 65, 26, 15, [80, 0, 0], -89);
     }

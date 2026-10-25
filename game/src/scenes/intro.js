@@ -16,7 +16,7 @@
 // Edit the story here. Each entry is one "message"; long ones scroll.
 const STORY = [
     "Howdy! This is Reveille, First Lady of Aggieland.",
-    "Every day, Rev is on duty: classes, football games, and more photos than she can count.",
+    "Every day, Rev is on duty. Classes, football games, and more photos than she can count.",
     "But today is different. Today is Rev's day off.",
     "And Rev knows a secret: campus is full of buried Aggie treasure.",
     "Rally towels, old jerseys, even a lost Aggie Ring or two.",
@@ -58,7 +58,6 @@ function wrap(str, max) {
 }
 
 export function introScene() {
-    loadFont("pixel", "fonts/press-start-2p.woff2", { size: FONT_SIZE, filter: "nearest" });
     loadSprite("dialog-box", "sprites/dialog-box.png");
     loadSprite("next-arrow", "sprites/next-arrow.png", {
         sliceX: 2,

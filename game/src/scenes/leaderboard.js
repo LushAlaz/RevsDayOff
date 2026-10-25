@@ -3,8 +3,8 @@
 export function leaderboardScene() {
     scene("leaderboard", () => {
         setBackground(rgb(24, 20, 28));
-        add([text("Leaderboard coming soon", { size: 32 }), pos(center()), anchor("center")]);
-        add([text("Press Esc to go back", { size: 20 }), pos(center().x, center().y + 50), anchor("center")]);
+        add([text("Leaderboard coming soon", { font: "pixel", size: 16 }), pos(center()), anchor("center")]);
+        add([text("Press Esc to go back", { font: "pixel", size: 8 }), pos(center().x, center().y + 50), anchor("center")]);
         onKeyPress("escape", () => go("title"));
     });
 }
