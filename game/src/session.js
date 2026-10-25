@@ -1,6 +1,5 @@
 import { ITEMS, RARITIES } from "./items.js";
 
-<<<<<<< Updated upstream
 const COINS_STORAGE_KEY = "revsdayoff.coins";
 const BAG_STORAGE_KEY = "revsdayoff.bag";
 const INTRO_STORAGE_KEY = "revsdayoff.introPlayed";
@@ -88,14 +87,6 @@ export const session = {
 };
 
 export function startNewGame() {
-=======
-export const session = { inventory: [], coins: 0, upgrades: [], mapId: "kyle-field" };
-
-export function startNewGame() {
-    session.inventory.length = 0;
-    session.coins = 0;
-    session.upgrades.length = 0;
->>>>>>> Stashed changes
     session.mapId = "kyle-field";
 }
 
