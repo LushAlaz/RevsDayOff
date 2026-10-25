@@ -46,6 +46,7 @@ Open the local URL printed in the terminal (normally `http://localhost:3000`). S
 | Sniff for hidden loot | Hold X |
 | Stop the treasure challenge pointer | Space |
 | Open or close your bag | B, or click the bag icon |
+| Mute or unmute the music | M |
 | Enter the shop / interact with the counter | Space |
 | Talk to the ducks at the Aggie Park pond | Space on the bank near them |
 | Read the barrel in the Good Bull shop | Space next to it |

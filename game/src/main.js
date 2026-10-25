@@ -10,12 +10,14 @@ import { loadHudSprites } from "./objects/hud.js";
 import { loadBevoSprites } from "./bevo.js";
 import { profileScene } from "./scenes/profile.js";
 import { loadProfile } from "./profile.js";
+import { loadMusicTracks } from "./music.js";
 
 loadProfile();
 loadSprites();
 loadCadetSprites();
 loadHudSprites();
 loadBevoSprites();
+loadMusicTracks();
 titleScene();
 leaderboardScene();
 introScene();

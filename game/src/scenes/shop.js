@@ -10,6 +10,7 @@ import { profile, hasProfile } from "../profile.js";
 import { UPGRADES, UPGRADE_STAND, createUpgradeShop, hasUpgrade, playerSpeed } from "../upgrades.js";
 import { addUpgradeUI } from "../upgrades-ui.js";
 import { addCrown, drawUpgradeIcon } from "../objects/upgrade-art.js";
+import { setSceneMusic } from "../music.js";
 
 export const BARREL_LABEL = "Marcel Reed's Interception Juice";
 const BARREL_READ_RANGE = 90;
@@ -46,6 +47,7 @@ function addUpgradeStand(box) {
 }
 
 scene("shop", ({ mapId = session.mapId } = {}) => {
+    setSceneMusic("shop");
     const origin = getMap(mapId);
     setCamPos(center());
     setBackground(rgb(24, 30, 40));
